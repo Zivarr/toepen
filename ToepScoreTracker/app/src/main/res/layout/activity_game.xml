@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primary_green">
+
+    <!-- Main Game UI -->
+    <LinearLayout
+        android:id="@+id/llGameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/players_label"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:layout_marginEnd="16dp"/>
+
+            <Button
+                android:id="@+id/btnKlop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Klop! (Punten: 1)" />
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+            <LinearLayout
+                android:id="@+id/llPlayers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/btnUndo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/undo_button"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnEndGame"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/end_game_button" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Post-Game Summary UI -->
+    <LinearLayout
+        android:id="@+id/llSummaryLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/primary_green"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvWinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Winner!"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="#FFD700"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/game_summary"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Duration: 00:00"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/btnShare"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/share_results"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btnBackToStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/back_to_start"
+            android:padding="16dp" />
+
+    </LinearLayout>
+
+</FrameLayout>

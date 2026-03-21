@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="32dp"
+    android:background="@color/primary_green"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Kies Profiel:"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:layout_marginBottom="8dp" />
+
+    <Spinner
+        android:id="@+id/spinnerProfile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:padding="12dp"
+        android:background="@drawable/spinner_background"
+        android:spinnerMode="dropdown" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Aantal spelers:"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:layout_marginBottom="16dp" />
+
+    <EditText
+        android:id="@+id/etPlayerCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:hint="Voer het aantal spelers in"
+        android:textColor="@color/white"
+        android:textColorHint="#BDBDBD"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/btnNext"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Volgende"
+        android:padding="12dp"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btnViewResults"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/view_results_button"
+        android:padding="12dp"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btnLeaderboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/leaderboard_button"
+        android:padding="12dp"
+        android:layout_marginBottom="32dp" />
+
+    <TextView
+        android:id="@+id/tvClearHistory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/clear_history"
+        android:textColor="#FFCDD2"
+        android:textSize="14sp"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <TextView
+        android:id="@+id/tvWipeAll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/wipe_all_databases"
+        android:textColor="#FFCDD2"
+        android:textSize="14sp"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+</LinearLayout>

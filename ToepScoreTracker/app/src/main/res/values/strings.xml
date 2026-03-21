@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Toepen Score Tracker</string>
+    <string name="players_label">Spelers:</string>
+    <string name="end_game_button">Eindig spel</string>
+    <string name="player_score">%1$s: %2$s</string>
+    <string name="penalty_button">Strafpunt voor %1$s</string>
+    <string name="game_ended">Spel beëindigd!</string>
+    <string name="results_label">Spelresultaten:</string>
+    <string name="view_results_button">Bekijk resultaten</string>
+    <string name="max_points_label">Maximum aantal strafpunten:</string>
+    <string name="enter_max_points_hint">bijv. 15</string>
+    <string name="player_lost">%s heeft verloren!</string>
+    <string name="player_won">%s heeft gewonnen!</string>
+    <string name="game_summary">Speloverzicht</string>
+    <string name="duration_label">Speelduur: %s</string>
+    <string name="back_to_start">Terug naar start</string>
+    <string name="klop_button">Klop! (Punten: %d)</string>
+    <string name="undo_button">Ongedaan maken</string>
+    <string name="share_results">Deel resultaten</string>
+    <string name="share_title">Resultaat van Toepen</string>
+    <string name="jack_button">Boer!</string>
+    <string name="leaderboard_button">Ranglijst</string>
+    <string name="leaderboard_title">Ranglijst (%s)</string>
+    <string name="clear_history">Wis geschiedenis</string>
+    <string name="wipe_all_databases">Wis alle gegevens (Beide profielen)</string>
+    <string name="confirm_clear">Weet je zeker dat je alle resultaten voor dit profiel wilt wissen?</string>
+    <string name="confirm_wipe_all">Weet je zeker dat je ALLE gegevens van BEIDE profielen wilt wissen? Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nee</string>
+</resources>
