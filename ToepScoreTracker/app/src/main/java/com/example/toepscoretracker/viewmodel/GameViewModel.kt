@@ -83,11 +83,18 @@ class GameViewModel(
     }
 
     fun undo() {
+        if (_uiState.value.isGameOver) return
         if (history.isNotEmpty()) {
             _uiState.value = _uiState.value.copy(scores = history.pop())
         } else {
             viewModelScope.launch { _events.emit(GameEvent.UndoEmpty) }
         }
+    }
+
+    fun nextRound() {
+        if (_uiState.value.isGameOver) return
+        history.clear()
+        _uiState.value = _uiState.value.copy(currentRoundPoints = 1)
     }
 
     fun endGame() {

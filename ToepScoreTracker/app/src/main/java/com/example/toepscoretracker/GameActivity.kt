@@ -45,6 +45,7 @@ class GameActivity : AppCompatActivity() {
 
     private val playerViews = mutableMapOf<String, PlayerRowViews>()
     private lateinit var btnKlop: Button
+    private lateinit var btnNextRound: Button
     private lateinit var btnEndGame: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +59,9 @@ class GameActivity : AppCompatActivity() {
         buildPlayerViews()
 
         btnKlop.setOnClickListener { viewModel.incrementKlop() }
+
+        btnNextRound = findViewById(R.id.btnNextRound)
+        btnNextRound.setOnClickListener { viewModel.nextRound() }
 
         findViewById<Button>(R.id.btnUndo).setOnClickListener { viewModel.undo() }
 
@@ -161,6 +165,7 @@ class GameActivity : AppCompatActivity() {
 
     private fun updateUI(state: GameUiState) {
         btnKlop.text = getString(R.string.klop_button, state.currentRoundPoints)
+        btnNextRound.isEnabled = !state.isGameOver
         btnEndGame.isEnabled = !state.isGameOver
 
         playerViews.forEach { (name, views) ->

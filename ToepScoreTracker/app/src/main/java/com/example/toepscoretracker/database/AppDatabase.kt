@@ -15,7 +15,14 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
-@Database(entities = [Game::class], version = 3)
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Switch separator from "," to "|" to allow commas in player names
+        db.execSQL("UPDATE games SET playerNames = REPLACE(playerNames, ',', '|')")
+    }
+}
+
+@Database(entities = [Game::class], version = 4)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun gameDao(): GameDao
@@ -34,7 +41,7 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         "toepen_database_kvw"
                     )
-                    .addMigrations(MIGRATION_2_3)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                     KVW_INSTANCE = instance
                     instance
@@ -46,7 +53,7 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         "toepen_database_work"
                     )
-                    .addMigrations(MIGRATION_2_3)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                     WORK_INSTANCE = instance
                     instance

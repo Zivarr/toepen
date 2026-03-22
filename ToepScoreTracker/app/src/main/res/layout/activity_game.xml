@@ -35,6 +35,15 @@
                 android:text="Klop! (Punten: 1)" />
         </LinearLayout>
 
+        <Button
+            android:id="@+id/btnNextRound"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/next_round_button"
+            android:layout_gravity="center"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp" />
+
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
