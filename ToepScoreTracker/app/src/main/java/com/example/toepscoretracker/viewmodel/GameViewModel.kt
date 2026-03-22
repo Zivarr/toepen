@@ -122,7 +122,7 @@ class GameViewModel(
     fun getDurationAtEnd(): Long = _uiState.value.durationAtEnd
 
     private fun saveGame(winner: String, duration: Long, quiet: Boolean) {
-        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        val timestamp = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()).format(Date())
         val game = Game(
             playerNames = playerNames,
             winnerName = winner,
