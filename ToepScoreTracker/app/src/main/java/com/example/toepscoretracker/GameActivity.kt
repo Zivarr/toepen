@@ -39,6 +39,7 @@ class GameActivity : AppCompatActivity() {
 
     private data class PlayerRowViews(
         val scoreText: TextView,
+        val foldButton: Button,
         val penaltyButton: Button,
         val boerButton: Button
     )
@@ -130,6 +131,15 @@ class GameActivity : AppCompatActivity() {
                 gravity = android.view.Gravity.CENTER
             }
 
+            val foldButton = Button(this).apply {
+                text = getString(R.string.fold_button, 0)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                setOnClickListener { viewModel.applyFold(name) }
+            }
+
             val penaltyButton = Button(this).apply {
                 text = getString(R.string.penalty_button, name)
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -152,6 +162,7 @@ class GameActivity : AppCompatActivity() {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 )
+                addView(foldButton)
                 addView(penaltyButton)
                 addView(boerButton)
             }
@@ -159,7 +170,7 @@ class GameActivity : AppCompatActivity() {
             llPlayers.addView(textView)
             llPlayers.addView(buttonContainer)
 
-            playerViews[name] = PlayerRowViews(textView, penaltyButton, boerButton)
+            playerViews[name] = PlayerRowViews(textView, foldButton, penaltyButton, boerButton)
         }
     }
 
@@ -182,8 +193,11 @@ class GameActivity : AppCompatActivity() {
                 views.scoreText.alpha = 1.0f
             }
 
-            views.penaltyButton.isEnabled = !isEliminated && !state.isGameOver
-            views.boerButton.isEnabled = !isEliminated && score > 0 && !state.isGameOver
+            val canAct = !isEliminated && !state.isGameOver
+            views.foldButton.text = getString(R.string.fold_button, state.currentRoundPoints - 1)
+            views.foldButton.isEnabled = canAct && state.currentRoundPoints >= 2
+            views.penaltyButton.isEnabled = canAct
+            views.boerButton.isEnabled = canAct && score > 0
         }
 
         if (state.isGameOver) {

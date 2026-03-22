@@ -20,6 +20,7 @@
     <string name="share_title">Resultaat van Toepen</string>
     <string name="jack_button">Boer!</string>
     <string name="next_round_button">Volgende ronde</string>
+    <string name="fold_button">Pas (%d pt)</string>
     <string name="leaderboard_button">Ranglijst</string>
     <string name="leaderboard_title">Ranglijst (%s)</string>
     <string name="clear_history">Wis geschiedenis</string>

@@ -63,7 +63,24 @@ class GameViewModel(
         val newScore = (state.scores[playerName] ?: 0) + state.currentRoundPoints
         val newScores = state.scores.toMutableMap().apply { put(playerName, newScore) }
 
-        _uiState.value = checkGameOver(state.copy(scores = newScores, currentRoundPoints = 1))
+        _uiState.value = checkGameOver(state.copy(scores = newScores))
+
+        if (newScore >= maxPenaltyPoints) {
+            viewModelScope.launch { _events.emit(GameEvent.PlayerEliminated(playerName)) }
+        }
+    }
+
+    fun applyFold(playerName: String) {
+        val state = _uiState.value
+        if (state.isGameOver) return
+
+        history.push(HashMap(state.scores))
+
+        val foldPoints = state.currentRoundPoints - 1
+        val newScore = (state.scores[playerName] ?: 0) + foldPoints
+        val newScores = state.scores.toMutableMap().apply { put(playerName, newScore) }
+
+        _uiState.value = checkGameOver(state.copy(scores = newScores))
 
         if (newScore >= maxPenaltyPoints) {
             viewModelScope.launch { _events.emit(GameEvent.PlayerEliminated(playerName)) }
