@@ -116,13 +116,12 @@ class GameViewModel(
 
     fun endGame() {
         if (_uiState.value.isGameOver) return
-        saveGame(winner = "", quiet = false)
+        saveGame(winner = "", duration = System.currentTimeMillis() - startTime, quiet = false)
     }
 
     fun getDurationAtEnd(): Long = _uiState.value.durationAtEnd
 
-    private fun saveGame(winner: String, quiet: Boolean) {
-        val duration = if (quiet) _uiState.value.durationAtEnd else System.currentTimeMillis() - startTime
+    private fun saveGame(winner: String, duration: Long, quiet: Boolean) {
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         val game = Game(
             playerNames = playerNames,
@@ -145,7 +144,7 @@ class GameViewModel(
             val newState = state.copy(isGameOver = true, winner = winner, durationAtEnd = duration)
             if (!savedOnGameOver) {
                 savedOnGameOver = true
-                saveGame(winner, quiet = true)
+                saveGame(winner, duration = duration, quiet = true)
             }
             newState
         } else {
