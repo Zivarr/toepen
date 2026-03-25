@@ -114,6 +114,9 @@ class GameActivity : AppCompatActivity() {
                         is GameEvent.PlayerEliminated -> {
                             Toast.makeText(this@GameActivity, getString(R.string.player_lost, event.name), Toast.LENGTH_SHORT).show()
                         }
+                        is GameEvent.GameOver -> {
+                            showCelebration(event.winner, event.durationMillis)
+                        }
                     }
                 }
             }
@@ -208,6 +211,7 @@ class GameActivity : AppCompatActivity() {
     private fun showCelebration(winnerName: String, durationMillis: Long) {
         val llGameLayout = findViewById<LinearLayout>(R.id.llGameLayout)
         val llSummaryLayout = findViewById<LinearLayout>(R.id.llSummaryLayout)
+        if (llSummaryLayout.visibility == View.VISIBLE) return
         val tvWinner = findViewById<TextView>(R.id.tvWinner)
         val tvDuration = findViewById<TextView>(R.id.tvDuration)
         val btnShare = findViewById<Button>(R.id.btnShare)

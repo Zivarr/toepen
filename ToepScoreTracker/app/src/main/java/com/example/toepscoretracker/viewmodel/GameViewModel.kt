@@ -28,6 +28,7 @@ sealed class GameEvent {
     data class GameSaved(val quiet: Boolean) : GameEvent()
     object UndoEmpty : GameEvent()
     data class PlayerEliminated(val name: String) : GameEvent()
+    data class GameOver(val winner: String, val durationMillis: Long) : GameEvent()
 }
 
 class GameViewModel(
@@ -144,6 +145,7 @@ class GameViewModel(
             val newState = state.copy(isGameOver = true, winner = winner, durationAtEnd = duration)
             if (!savedOnGameOver) {
                 savedOnGameOver = true
+                viewModelScope.launch { _events.emit(GameEvent.GameOver(winner, duration)) }
                 saveGame(winner, duration = duration, quiet = true)
             }
             newState
