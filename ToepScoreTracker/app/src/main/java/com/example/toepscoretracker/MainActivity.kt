@@ -51,16 +51,19 @@ class MainActivity : AppCompatActivity() {
 
         btnNext.setOnClickListener {
             val playerCount = etPlayerCount.text.toString()
-            if (playerCount.isNotEmpty()) {
-                val selectedProfile = spinnerProfile.selectedItem.toString()
-                sharedPrefs.edit().putString("lastProfile", selectedProfile).apply()
-                val intent = Intent(this, PlayerSetupActivity::class.java).apply {
-                    putExtra("playerCount", playerCount.toInt())
-                    putExtra("profile", selectedProfile)
+            val count = playerCount.toIntOrNull()
+            when {
+                count == null -> Toast.makeText(this, getString(R.string.enter_player_count), Toast.LENGTH_SHORT).show()
+                count < 2 || count > 8 -> Toast.makeText(this, getString(R.string.player_count_out_of_range), Toast.LENGTH_SHORT).show()
+                else -> {
+                    val selectedProfile = spinnerProfile.selectedItem.toString()
+                    sharedPrefs.edit().putString("lastProfile", selectedProfile).apply()
+                    val intent = Intent(this, PlayerSetupActivity::class.java).apply {
+                        putExtra("playerCount", count)
+                        putExtra("profile", selectedProfile)
+                    }
+                    startActivity(intent)
                 }
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "Voer het aantal spelers in", Toast.LENGTH_SHORT).show()
             }
         }
 
