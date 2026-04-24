@@ -60,7 +60,7 @@ class PlayerSetupActivity : AppCompatActivity() {
             // Sla de instelling op voor dit profiel
             sharedPrefs.edit().putInt("lastMaxPoints", maxPoints).apply()
 
-            val playerNames = nameInputFields.map { it.text.toString().trim() }
+            val playerNames = nameInputFields.map { it.text.toString().trim().replaceFirstChar { c -> c.uppercase() } }
             
             if (playerNames.any { it.isEmpty() }) {
                 Toast.makeText(this, "Voer alle spelersnamen in", Toast.LENGTH_SHORT).show()
