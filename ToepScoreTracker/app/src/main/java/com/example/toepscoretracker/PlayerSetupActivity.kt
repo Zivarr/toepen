@@ -67,6 +67,11 @@ class PlayerSetupActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            if (playerNames.size != playerNames.toSet().size) {
+                Toast.makeText(this, "Spelersnamen moeten uniek zijn", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             val intent = Intent(this, GameActivity::class.java).apply {
                 putExtra("playerNames", playerNames.toTypedArray())
                 putExtra("maxPenaltyPoints", maxPoints)
