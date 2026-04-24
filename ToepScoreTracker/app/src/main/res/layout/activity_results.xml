@@ -30,6 +30,14 @@
     </ScrollView>
 
     <Button
+        android:id="@+id/btnDeleteShortGames"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/delete_short_games"
+        android:padding="12dp"
+        android:layout_marginBottom="8dp" />
+
+    <Button
         android:id="@+id/btnBackToStart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

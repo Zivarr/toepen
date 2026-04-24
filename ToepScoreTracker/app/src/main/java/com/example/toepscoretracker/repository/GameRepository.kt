@@ -14,6 +14,8 @@ class GameRepository(private val gameDao: GameDao) {
 
     suspend fun deleteAll() = gameDao.deleteAll()
 
+    suspend fun deleteShortGames(maxDuration: Long) = gameDao.deleteShortGames(maxDuration)
+
     suspend fun getWinCounts(): List<Pair<String, Int>> =
         getAllGames()
             .filter { it.winnerName.isNotEmpty() }

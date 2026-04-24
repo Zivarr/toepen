@@ -29,4 +29,6 @@
     <string name="confirm_wipe_all">Weet je zeker dat je ALLE gegevens van BEIDE profielen wilt wissen? Dit kan niet ongedaan worden gemaakt.</string>
     <string name="yes">Ja</string>
     <string name="no">Nee</string>
+    <string name="delete_short_games">Verwijder korte spellen (&lt; 1 min)</string>
+    <string name="confirm_delete_short_games">Weet je zeker dat je alle spellen korter dan 1 minuut wilt verwijderen?</string>
 </resources>

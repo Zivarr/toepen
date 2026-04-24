@@ -18,4 +18,7 @@ interface GameDao {
 
     @Query("DELETE FROM games")
     suspend fun deleteAll()
+
+    @Query("DELETE FROM games WHERE duration < :maxDuration")
+    suspend fun deleteShortGames(maxDuration: Long)
 }

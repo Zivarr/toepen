@@ -1,6 +1,7 @@
 package com.example.toepscoretracker
 
 import android.content.Intent
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
@@ -30,6 +31,14 @@ class ResultsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_results)
+
+        findViewById<Button>(R.id.btnDeleteShortGames).setOnClickListener {
+            AlertDialog.Builder(this)
+                .setMessage(R.string.confirm_delete_short_games)
+                .setPositiveButton(R.string.yes) { _, _ -> viewModel.deleteShortGames() }
+                .setNegativeButton(R.string.no, null)
+                .show()
+        }
 
         findViewById<Button>(R.id.btnBackToStart).setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
