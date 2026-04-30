@@ -10,5 +10,7 @@ data class Game(
     val winnerName: String = "",
     val maxPenaltyPoints: Int,
     val duration: Long,
-    val timestamp: String
+    val timestamp: String,
+    val finalScores: List<Int> = emptyList(),
+    val boerCounts: List<Int> = emptyList()
 )

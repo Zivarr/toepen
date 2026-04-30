@@ -48,6 +48,7 @@ class GameViewModel(
     private val history = Stack<Map<String, Int>>()
     private val startTime = System.currentTimeMillis()
     private var savedOnGameOver = false
+    private val boerCounts: MutableMap<String, Int> = playerNames.associateWith { 0 }.toMutableMap()
 
     fun incrementKlop() {
         _uiState.value = _uiState.value.copy(
@@ -61,7 +62,7 @@ class GameViewModel(
 
         history.push(HashMap(state.scores))
 
-        val newScore = (state.scores[playerName] ?: 0) + state.currentRoundPoints
+        val newScore = minOf((state.scores[playerName] ?: 0) + state.currentRoundPoints, maxPenaltyPoints)
         val newScores = state.scores.toMutableMap().apply { put(playerName, newScore) }
 
         _uiState.value = checkGameOver(state.copy(scores = newScores))
@@ -78,7 +79,7 @@ class GameViewModel(
         history.push(HashMap(state.scores))
 
         val foldPoints = state.currentRoundPoints - 1
-        val newScore = (state.scores[playerName] ?: 0) + foldPoints
+        val newScore = minOf((state.scores[playerName] ?: 0) + foldPoints, maxPenaltyPoints)
         val newScores = state.scores.toMutableMap().apply { put(playerName, newScore) }
 
         _uiState.value = checkGameOver(state.copy(scores = newScores))
@@ -96,6 +97,7 @@ class GameViewModel(
 
         val newScore = maxOf(0, (state.scores[playerName] ?: 0) - 1)
         val newScores = state.scores.toMutableMap().apply { put(playerName, newScore) }
+        boerCounts[playerName] = (boerCounts[playerName] ?: 0) + 1
 
         _uiState.value = checkGameOver(state.copy(scores = newScores))
     }
@@ -117,19 +119,21 @@ class GameViewModel(
 
     fun endGame() {
         if (_uiState.value.isGameOver) return
-        saveGame(winner = "", duration = System.currentTimeMillis() - startTime, quiet = false)
+        saveGame(winner = "", duration = System.currentTimeMillis() - startTime, quiet = false, scores = _uiState.value.scores)
     }
 
     fun getDurationAtEnd(): Long = _uiState.value.durationAtEnd
 
-    private fun saveGame(winner: String, duration: Long, quiet: Boolean) {
+    private fun saveGame(winner: String, duration: Long, quiet: Boolean, scores: Map<String, Int>) {
         val timestamp = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()).format(Date())
         val game = Game(
             playerNames = playerNames,
             winnerName = winner,
             maxPenaltyPoints = maxPenaltyPoints,
             duration = duration,
-            timestamp = timestamp
+            timestamp = timestamp,
+            finalScores = playerNames.map { scores[it] ?: 0 },
+            boerCounts = playerNames.map { boerCounts[it] ?: 0 }
         )
         viewModelScope.launch {
             repository.insertGame(game)
@@ -146,7 +150,7 @@ class GameViewModel(
             if (!savedOnGameOver) {
                 savedOnGameOver = true
                 viewModelScope.launch { _events.emit(GameEvent.GameOver(winner, duration)) }
-                saveGame(winner, duration = duration, quiet = true)
+                saveGame(winner, duration = duration, quiet = true, scores = state.scores)
             }
             newState
         } else {

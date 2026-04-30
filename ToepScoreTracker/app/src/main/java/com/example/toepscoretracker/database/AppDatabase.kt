@@ -22,6 +22,13 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE games ADD COLUMN finalScores TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE games ADD COLUMN boerCounts TEXT NOT NULL DEFAULT ''")
+    }
+}
+
 val MIGRATION_4_5 = object : Migration(4, 5) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val cursor = db.query("SELECT id, winnerName, playerNames FROM games")
@@ -43,7 +50,7 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
     private fun String.capitalizeFirst() = if (isEmpty()) this else this[0].uppercaseChar() + substring(1)
 }
 
-@Database(entities = [Game::class], version = 5)
+@Database(entities = [Game::class], version = 6)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun gameDao(): GameDao
@@ -62,7 +69,7 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         "toepen_database_kvw"
                     )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .build()
                     KVW_INSTANCE = instance
                     instance
@@ -74,7 +81,7 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         "toepen_database_work"
                     )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .build()
                     WORK_INSTANCE = instance
                     instance

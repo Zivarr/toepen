@@ -62,9 +62,18 @@ class ResultsActivity : AppCompatActivity() {
                     } else {
                         games.forEach { game ->
                             llResults.addView(TextView(this@ResultsActivity).apply {
+                                val scoresText = if (game.finalScores.isNotEmpty()) {
+                                    "\nEindscores: " + game.playerNames.indices.joinToString(", ") { i ->
+                                        val name = game.playerNames[i]
+                                        val score = game.finalScores[i]
+                                        val boer = game.boerCounts.getOrElse(i) { 0 }
+                                        if (boer > 0) "$name: $score (${boer}x Boer)" else "$name: $score"
+                                    }
+                                } else ""
                                 text = """
                                     Datum: ${game.timestamp}
-                                    Spelers: ${game.playerNames.joinToString(", ")}
+                                    Winnaar: ${game.winnerName.ifBlank { "-" }}
+                                    Spelers: ${game.playerNames.joinToString(", ")}$scoresText
                                     Maximale strafpunten: ${game.maxPenaltyPoints}
                                     Duur: ${DurationFormatter.format(game.duration)}
                                     ----------------------------
