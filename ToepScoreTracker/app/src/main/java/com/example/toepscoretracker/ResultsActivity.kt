@@ -1,10 +1,10 @@
 package com.example.toepscoretracker
 
 import android.content.Intent
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -57,31 +57,34 @@ class ResultsActivity : AppCompatActivity() {
                         llResults.addView(TextView(this@ResultsActivity).apply {
                             text = "Geen spelresultaten gevonden."
                             textSize = 18f
-                            gravity = Gravity.CENTER
+                            setTextColor(0xFFFFFFFF.toInt())
+                            setPadding(0, 32, 0, 0)
                         })
                     } else {
                         games.forEach { game ->
-                            llResults.addView(TextView(this@ResultsActivity).apply {
-                                val scoresText = if (game.finalScores.isNotEmpty()) {
-                                    "\nEindscores: " + game.playerNames.indices.joinToString(", ") { i ->
-                                        val name = game.playerNames[i]
-                                        val score = game.finalScores[i]
-                                        val boer = game.boerCounts.getOrElse(i) { 0 }
-                                        if (boer > 0) "$name: $score (${boer}x Boer)" else "$name: $score"
-                                    }
-                                } else ""
-                                text = """
-                                    Datum: ${game.timestamp}
-                                    Winnaar: ${game.winnerName.ifBlank { "-" }}
-                                    Spelers: ${game.playerNames.joinToString(", ")}$scoresText
-                                    Maximale strafpunten: ${game.maxPenaltyPoints}
-                                    Duur: ${DurationFormatter.format(game.duration)}
-                                    ----------------------------
-                                """.trimIndent()
-                                textSize = 16f
-                                gravity = Gravity.CENTER
-                                setPadding(0, 8, 0, 8)
-                            })
+                            val card = layoutInflater.inflate(R.layout.item_game_result, llResults, false)
+                            card.findViewById<TextView>(R.id.tvTimestamp).text = game.timestamp
+                            card.findViewById<TextView>(R.id.tvWinner).text =
+                                "Winnaar: ${game.winnerName.ifBlank { "-" }}"
+                            card.findViewById<TextView>(R.id.tvPlayers).text =
+                                "Spelers: ${game.playerNames.joinToString(", ")}"
+                            val scoresView = card.findViewById<TextView>(R.id.tvScores)
+                            if (game.finalScores.isNotEmpty()) {
+                                scoresView.text = game.playerNames.indices.joinToString("\n") { i ->
+                                    val score = game.finalScores[i]
+                                    val boer = game.boerCounts.getOrElse(i) { 0 }
+                                    if (boer > 0) "${game.playerNames[i]}: $score (${boer}x Boer)"
+                                    else "${game.playerNames[i]}: $score"
+                                }
+                                scoresView.visibility = View.VISIBLE
+                            } else {
+                                scoresView.visibility = View.GONE
+                            }
+                            card.findViewById<TextView>(R.id.tvMaxPoints).text =
+                                "Max: ${game.maxPenaltyPoints} strafpunten"
+                            card.findViewById<TextView>(R.id.tvDuration).text =
+                                DurationFormatter.format(game.duration)
+                            llResults.addView(card)
                         }
                     }
                 }
