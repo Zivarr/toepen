@@ -238,7 +238,7 @@ class GameActivity : AppCompatActivity() {
         konfettiView.start(
             listOf(
                 Party(
-                    angle = 45,
+                    angle = 315,
                     spread = 50,
                     speed = 14f,
                     maxSpeed = 30f,
@@ -248,7 +248,7 @@ class GameActivity : AppCompatActivity() {
                     position = Position.Relative(0.0, 1.0)
                 ),
                 Party(
-                    angle = 135,
+                    angle = 225,
                     spread = 50,
                     speed = 14f,
                     maxSpeed = 30f,
