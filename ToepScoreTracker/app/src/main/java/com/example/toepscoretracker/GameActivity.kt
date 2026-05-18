@@ -21,6 +21,7 @@ import com.example.toepscoretracker.viewmodel.GameEvent
 import com.example.toepscoretracker.viewmodel.GameUiState
 import com.example.toepscoretracker.viewmodel.GameViewModel
 import com.example.toepscoretracker.viewmodel.GameViewModelFactory
+import android.util.Log
 import androidx.activity.OnBackPressedCallback
 import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.core.Party
@@ -232,6 +233,7 @@ class GameActivity : AppCompatActivity() {
         llGameLayout.visibility = View.GONE
         llSummaryLayout.visibility = View.VISIBLE
 
+        Log.d(TAG, "showCelebration: firing confetti for winner=$winnerName")
         val colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x00bcd4)
         konfettiView.start(
             listOf(
@@ -257,6 +259,10 @@ class GameActivity : AppCompatActivity() {
                 )
             )
         )
+    }
+
+    companion object {
+        private const val TAG = "GameActivity"
     }
 
     private fun shareResults(winnerName: String, durationText: String) {

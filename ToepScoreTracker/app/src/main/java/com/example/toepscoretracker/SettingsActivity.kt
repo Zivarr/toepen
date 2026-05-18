@@ -15,6 +15,7 @@ import com.example.toepscoretracker.database.AppDatabase
 import com.example.toepscoretracker.repository.GameRepository
 import com.example.toepscoretracker.viewmodel.SettingsViewModel
 import com.example.toepscoretracker.viewmodel.SettingsViewModelFactory
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -114,9 +115,14 @@ class SettingsActivity : AppCompatActivity() {
                 val fileName = viewModel.backupToDownloads(applicationContext, profile)
                 Toast.makeText(this@SettingsActivity, getString(R.string.backup_success_file, fileName), Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
+                Log.e(TAG, "startBackup: failed for profile=$profile", e)
                 Toast.makeText(this@SettingsActivity, getString(R.string.backup_failed), Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "SettingsActivity"
     }
 
     private fun startRestore(profile: String) {

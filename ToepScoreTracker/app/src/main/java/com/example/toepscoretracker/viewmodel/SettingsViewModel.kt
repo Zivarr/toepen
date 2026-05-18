@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.toepscoretracker.database.AppDatabase
@@ -44,14 +45,22 @@ class SettingsViewModel(
     }
 
     suspend fun backupToDownloads(context: Context, profile: String): String = withContext(Dispatchers.IO) {
+        Log.d(TAG, "backupToDownloads: start, profile=$profile, SDK=${Build.VERSION.SDK_INT}")
+
         val db = AppDatabase.getDatabase(context, profile)
+        Log.d(TAG, "backupToDownloads: database instance obtained")
+
         db.openHelper.writableDatabase.execSQL("PRAGMA wal_checkpoint(TRUNCATE)")
+        Log.d(TAG, "backupToDownloads: WAL checkpoint done")
+
         val dbFile = context.getDatabasePath(dbNameFor(profile))
+        Log.d(TAG, "backupToDownloads: dbFile=${dbFile.absolutePath}, exists=${dbFile.exists()}, size=${dbFile.length()}")
 
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         val fileName = "toepen_${profile.lowercase()}_$today.db"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Log.d(TAG, "backupToDownloads: using MediaStore (Android 10+)")
             val values = ContentValues().apply {
                 put(MediaStore.Downloads.DISPLAY_NAME, fileName)
                 put(MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
@@ -60,19 +69,24 @@ class SettingsViewModel(
             val resolver = context.contentResolver
             val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                 ?: throw IOException("Kon geen Downloads-item aanmaken")
+            Log.d(TAG, "backupToDownloads: MediaStore URI=$uri")
             resolver.openOutputStream(uri)?.use { out ->
                 dbFile.inputStream().use { it.copyTo(out) }
             }
             values.clear()
             values.put(MediaStore.Downloads.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
+            Log.d(TAG, "backupToDownloads: MediaStore copy done")
         } else {
+            Log.d(TAG, "backupToDownloads: using legacy Downloads dir")
             @Suppress("DEPRECATION")
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             downloadsDir.mkdirs()
             dbFile.copyTo(File(downloadsDir, fileName), overwrite = true)
+            Log.d(TAG, "backupToDownloads: legacy copy done to ${downloadsDir.absolutePath}/$fileName")
         }
 
+        Log.d(TAG, "backupToDownloads: success, fileName=$fileName")
         fileName
     }
 
@@ -114,6 +128,7 @@ class SettingsViewModel(
     }
 
     companion object {
+        private const val TAG = "SettingsViewModel"
         fun dbNameFor(profile: String) =
             if (profile == "KVW") "toepen_database_kvw" else "toepen_database_work"
     }
