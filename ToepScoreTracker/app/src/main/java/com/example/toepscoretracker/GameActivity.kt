@@ -234,7 +234,7 @@ class GameActivity : AppCompatActivity() {
         llSummaryLayout.visibility = View.VISIBLE
 
         Log.d(TAG, "showCelebration: firing confetti for winner=$winnerName")
-        val colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x00bcd4)
+        val colors = listOf(0xFFfce18a.toInt(), 0xFFff726d.toInt(), 0xFFf4306d.toInt(), 0xFFb48def.toInt(), 0xFF00bcd4.toInt())
         konfettiView.start(
             listOf(
                 Party(
