@@ -2,10 +2,10 @@ package com.example.toepscoretracker
 
 import android.content.Intent
 import android.view.View
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -32,12 +32,12 @@ class ResultsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_results)
 
-        findViewById<Button>(R.id.btnDeleteShortGames).setOnClickListener {
-            AlertDialog.Builder(this)
-                .setMessage(R.string.confirm_delete_short_games)
-                .setPositiveButton(R.string.yes) { _, _ -> viewModel.deleteShortGames() }
-                .setNegativeButton(R.string.no, null)
-                .show()
+        val profile = intent.getStringExtra("profile") ?: "Work"
+
+        findViewById<ImageButton>(R.id.btnSettings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java).apply {
+                putExtra("profile", profile)
+            })
         }
 
         findViewById<Button>(R.id.btnBackToStart).setOnClickListener {

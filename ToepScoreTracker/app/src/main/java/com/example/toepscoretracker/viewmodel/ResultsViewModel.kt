@@ -7,16 +7,9 @@ import com.example.toepscoretracker.repository.GameRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 class ResultsViewModel(private val repository: GameRepository) : ViewModel() {
 
     val games: StateFlow<List<Game>> = repository.getGamesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    fun deleteShortGames() {
-        viewModelScope.launch {
-            repository.deleteShortGames(60_000L)
-        }
-    }
 }

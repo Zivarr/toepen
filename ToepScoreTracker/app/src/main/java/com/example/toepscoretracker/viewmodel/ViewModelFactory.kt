@@ -32,3 +32,11 @@ class MainViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
         MainViewModel(repositoryProvider) as T
 }
+
+class SettingsViewModelFactory(
+    private val repositoryProvider: (String) -> GameRepository
+) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T =
+        SettingsViewModel(repositoryProvider) as T
+}

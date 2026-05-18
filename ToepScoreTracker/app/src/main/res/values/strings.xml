@@ -33,4 +33,24 @@
     <string name="player_count_out_of_range">Aantal spelers moet tussen 2 en 8 liggen</string>
     <string name="delete_short_games">Verwijder korte spellen (&lt; 1 min)</string>
     <string name="confirm_delete_short_games">Weet je zeker dat je alle spellen korter dan 1 minuut wilt verwijderen?</string>
+    <string name="settings_title">Instellingen</string>
+    <string name="section_manage">Beheer</string>
+    <string name="section_backup">Back-up &amp; herstel</string>
+    <string name="section_danger">Gevaarlijke acties</string>
+    <string name="max_points_work_label">Standaard max. strafpunten (Work):</string>
+    <string name="max_points_kvw_label">Standaard max. strafpunten (KVW):</string>
+    <string name="save_settings">Opslaan</string>
+    <string name="settings_saved">Instellingen opgeslagen</string>
+    <string name="backup_work">Back-up Work</string>
+    <string name="backup_kvw">Back-up KVW</string>
+    <string name="restore_work">Herstel Work</string>
+    <string name="restore_kvw">Herstel KVW</string>
+    <string name="backup_success">Back-up opgeslagen</string>
+    <string name="backup_failed">Back-up mislukt</string>
+    <string name="restore_title">Herstel database</string>
+    <string name="restore_success">Herstel geslaagd</string>
+    <string name="restore_failed">Herstel mislukt</string>
+    <string name="confirm_restore">Weet je zeker dat je wilt herstellen? Bestaande spellen blijven behouden, nieuwe spellen worden toegevoegd.</string>
+    <string name="current_profile">Huidig profiel: %s</string>
+    <string name="clear_history_current">Wis geschiedenis (huidig profiel)</string>
 </resources>

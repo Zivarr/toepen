@@ -21,4 +21,7 @@ interface GameDao {
 
     @Query("DELETE FROM games WHERE duration < :maxDuration")
     suspend fun deleteShortGames(maxDuration: Long)
+
+    @Query("SELECT COUNT(*) FROM games WHERE timestamp = :timestamp AND playerNames = :playerNames")
+    suspend fun countByTimestampAndPlayers(timestamp: String, playerNames: String): Int
 }

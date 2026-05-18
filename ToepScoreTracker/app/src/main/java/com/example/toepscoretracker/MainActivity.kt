@@ -1,6 +1,5 @@
 package com.example.toepscoretracker
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -8,22 +7,11 @@ import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Spinner
-import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.viewModels
-import com.example.toepscoretracker.database.AppDatabase
-import com.example.toepscoretracker.repository.GameRepository
-import com.example.toepscoretracker.viewmodel.MainViewModel
-import com.example.toepscoretracker.viewmodel.MainViewModelFactory
 
 class MainActivity : AppCompatActivity() {
-
-    private val viewModel: MainViewModel by viewModels {
-        MainViewModelFactory { profile ->
-            GameRepository(AppDatabase.getDatabase(this, profile).gameDao())
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,8 +21,7 @@ class MainActivity : AppCompatActivity() {
         val btnNext = findViewById<Button>(R.id.btnNext)
         val btnViewResults = findViewById<Button>(R.id.btnViewResults)
         val btnLeaderboard = findViewById<Button>(R.id.btnLeaderboard)
-        val tvClearHistory = findViewById<TextView>(R.id.tvClearHistory)
-        val tvWipeAll = findViewById<TextView>(R.id.tvWipeAll)
+        val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
         val spinnerProfile = findViewById<Spinner>(R.id.spinnerProfile)
 
         val profiles = arrayOf("Work", "KVW")
@@ -58,11 +45,10 @@ class MainActivity : AppCompatActivity() {
                 else -> {
                     val selectedProfile = spinnerProfile.selectedItem.toString()
                     sharedPrefs.edit().putString("lastProfile", selectedProfile).apply()
-                    val intent = Intent(this, PlayerSetupActivity::class.java).apply {
+                    startActivity(Intent(this, PlayerSetupActivity::class.java).apply {
                         putExtra("playerCount", count)
                         putExtra("profile", selectedProfile)
-                    }
-                    startActivity(intent)
+                    })
                 }
             }
         }
@@ -81,32 +67,11 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-        tvClearHistory.setOnClickListener {
+        btnSettings.setOnClickListener {
             val selectedProfile = spinnerProfile.selectedItem.toString()
-            showConfirmDialog(
-                getString(R.string.clear_history),
-                getString(R.string.confirm_clear)
-            ) {
-                viewModel.deleteAll(selectedProfile)
-            }
+            startActivity(Intent(this, SettingsActivity::class.java).apply {
+                putExtra("profile", selectedProfile)
+            })
         }
-
-        tvWipeAll.setOnClickListener {
-            showConfirmDialog(
-                getString(R.string.wipe_all_databases),
-                getString(R.string.confirm_wipe_all)
-            ) {
-                viewModel.wipeAll()
-            }
-        }
-    }
-
-    private fun showConfirmDialog(title: String, message: String, onConfirm: () -> Unit) {
-        AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)
-            .setPositiveButton(R.string.yes) { _, _ -> onConfirm() }
-            .setNegativeButton(R.string.no, null)
-            .show()
     }
 }
