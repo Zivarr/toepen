@@ -9,6 +9,8 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.sqlite.db.SimpleSQLiteQuery
+import com.example.toepscoretracker.database.AppDatabase
 import com.example.toepscoretracker.database.Game
 import com.example.toepscoretracker.repository.GameRepository
 import kotlinx.coroutines.Dispatchers
@@ -46,44 +48,41 @@ class SettingsViewModel(
     suspend fun backupToDownloads(context: Context, profile: String): String = withContext(Dispatchers.IO) {
         Log.d(TAG, "backupToDownloads: start, profile=$profile, SDK=${Build.VERSION.SDK_INT}")
 
+        // Checkpoint via Room's query API so all data is flushed into the .db file
+        val db = AppDatabase.getDatabase(context, profile)
+        val cursor = db.query(SimpleSQLiteQuery("PRAGMA wal_checkpoint(TRUNCATE)"))
+        cursor.moveToFirst()
+        cursor.close()
+        Log.d(TAG, "backupToDownloads: WAL checkpoint done")
+
         val dbFile = context.getDatabasePath(dbNameFor(profile))
         Log.d(TAG, "backupToDownloads: dbFile=${dbFile.absolutePath}, exists=${dbFile.exists()}, size=${dbFile.length()}")
 
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         val fileName = "toepen_${profile.lowercase()}_$today.db"
 
-        val filesToCopy = listOf(dbFile, File("${dbFile.path}-wal"), File("${dbFile.path}-shm"))
-            .filter { it.exists() }
-        Log.d(TAG, "backupToDownloads: files to copy: ${filesToCopy.map { it.name }}")
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             Log.d(TAG, "backupToDownloads: using MediaStore (Android 10+)")
-            val resolver = context.contentResolver
-            for (file in filesToCopy) {
-                val outName = fileName + file.name.removePrefix(dbFile.name)
-                val values = ContentValues().apply {
-                    put(MediaStore.Downloads.DISPLAY_NAME, outName)
-                    put(MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
-                    put(MediaStore.Downloads.IS_PENDING, 1)
-                }
-                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-                    ?: throw IOException("Kon geen Downloads-item aanmaken voor $outName")
-                Log.d(TAG, "backupToDownloads: writing $outName to $uri")
-                resolver.openOutputStream(uri)?.use { out -> file.inputStream().use { it.copyTo(out) } }
-                values.clear()
-                values.put(MediaStore.Downloads.IS_PENDING, 0)
-                resolver.update(uri, values, null, null)
+            val values = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
+                put(MediaStore.Downloads.IS_PENDING, 1)
             }
+            val resolver = context.contentResolver
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                ?: throw IOException("Kon geen Downloads-item aanmaken")
+            Log.d(TAG, "backupToDownloads: writing $fileName to $uri")
+            resolver.openOutputStream(uri)?.use { out -> dbFile.inputStream().use { it.copyTo(out) } }
+            values.clear()
+            values.put(MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
             Log.d(TAG, "backupToDownloads: MediaStore copy done")
         } else {
             Log.d(TAG, "backupToDownloads: using legacy Downloads dir")
             @Suppress("DEPRECATION")
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             downloadsDir.mkdirs()
-            for (file in filesToCopy) {
-                val outName = fileName + file.name.removePrefix(dbFile.name)
-                file.copyTo(File(downloadsDir, outName), overwrite = true)
-            }
+            dbFile.copyTo(File(downloadsDir, fileName), overwrite = true)
             Log.d(TAG, "backupToDownloads: legacy copy done to ${downloadsDir.absolutePath}")
         }
 
