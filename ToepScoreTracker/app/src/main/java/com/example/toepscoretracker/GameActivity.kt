@@ -238,21 +238,21 @@ class GameActivity : AppCompatActivity() {
         konfettiView.start(
             listOf(
                 Party(
-                    angle = 315,
+                    angle = 295,
                     spread = 50,
-                    speed = 30f,
-                    maxSpeed = 60f,
-                    damping = 0.95f,
+                    speed = 14f,
+                    maxSpeed = 30f,
+                    damping = 0.9f,
                     colors = colors,
                     emitter = Emitter(duration = 3, TimeUnit.SECONDS).perSecond(40),
                     position = Position.Relative(0.0, 1.0)
                 ),
                 Party(
-                    angle = 225,
+                    angle = 245,
                     spread = 50,
-                    speed = 30f,
-                    maxSpeed = 60f,
-                    damping = 0.95f,
+                    speed = 14f,
+                    maxSpeed = 30f,
+                    damping = 0.9f,
                     colors = colors,
                     emitter = Emitter(duration = 3, TimeUnit.SECONDS).perSecond(40),
                     position = Position.Relative(1.0, 1.0)
