@@ -1,7 +1,11 @@
 package com.example.toepscoretracker.viewmodel
 
+import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.toepscoretracker.database.AppDatabase
@@ -11,6 +15,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class SettingsViewModel(
     private val repositoryProvider: (String) -> GameRepository
@@ -35,10 +43,37 @@ class SettingsViewModel(
         }
     }
 
-    suspend fun prepareBackupFile(context: Context, profile: String): File = withContext(Dispatchers.IO) {
+    suspend fun backupToDownloads(context: Context, profile: String): String = withContext(Dispatchers.IO) {
         val db = AppDatabase.getDatabase(context, profile)
         db.openHelper.writableDatabase.execSQL("PRAGMA wal_checkpoint(TRUNCATE)")
-        context.getDatabasePath(dbNameFor(profile))
+        val dbFile = context.getDatabasePath(dbNameFor(profile))
+
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val fileName = "toepen_${profile.lowercase()}_$today.db"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
+                put(MediaStore.Downloads.IS_PENDING, 1)
+            }
+            val resolver = context.contentResolver
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                ?: throw IOException("Kon geen Downloads-item aanmaken")
+            resolver.openOutputStream(uri)?.use { out ->
+                dbFile.inputStream().use { it.copyTo(out) }
+            }
+            values.clear()
+            values.put(MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        } else {
+            @Suppress("DEPRECATION")
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            downloadsDir.mkdirs()
+            dbFile.copyTo(File(downloadsDir, fileName), overwrite = true)
+        }
+
+        fileName
     }
 
     suspend fun restoreFromFile(context: Context, profile: String, backupFile: File) = withContext(Dispatchers.IO) {

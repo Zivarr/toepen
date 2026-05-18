@@ -23,6 +23,11 @@ import com.example.toepscoretracker.viewmodel.GameViewModel
 import com.example.toepscoretracker.viewmodel.GameViewModelFactory
 import androidx.activity.OnBackPressedCallback
 import kotlinx.coroutines.launch
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import nl.dionsegijn.konfetti.xml.KonfettiView
+import java.util.concurrent.TimeUnit
 
 class GameActivity : AppCompatActivity() {
 
@@ -48,6 +53,7 @@ class GameActivity : AppCompatActivity() {
     private lateinit var btnKlop: Button
     private lateinit var btnNextRound: Button
     private lateinit var btnEndGame: Button
+    private lateinit var konfettiView: KonfettiView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +61,7 @@ class GameActivity : AppCompatActivity() {
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        konfettiView = findViewById(R.id.konfettiView)
         btnKlop = findViewById(R.id.btnKlop)
 
         buildPlayerViews()
@@ -224,6 +231,32 @@ class GameActivity : AppCompatActivity() {
 
         llGameLayout.visibility = View.GONE
         llSummaryLayout.visibility = View.VISIBLE
+
+        val colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x00bcd4)
+        konfettiView.start(
+            listOf(
+                Party(
+                    angle = 45,
+                    spread = 50,
+                    speed = 14f,
+                    maxSpeed = 30f,
+                    damping = 0.9f,
+                    colors = colors,
+                    emitter = Emitter(duration = 3, TimeUnit.SECONDS).perSecond(40),
+                    position = Position.Relative(0.0, 1.0)
+                ),
+                Party(
+                    angle = 135,
+                    spread = 50,
+                    speed = 14f,
+                    maxSpeed = 30f,
+                    damping = 0.9f,
+                    colors = colors,
+                    emitter = Emitter(duration = 3, TimeUnit.SECONDS).perSecond(40),
+                    position = Position.Relative(1.0, 1.0)
+                )
+            )
+        )
     }
 
     private fun shareResults(winnerName: String, durationText: String) {

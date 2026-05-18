@@ -19,9 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -31,30 +28,7 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private var pendingBackupFile: File? = null
     private var pendingRestoreProfile: String? = null
-
-    private val backupLauncher = registerForActivityResult(
-        ActivityResultContracts.CreateDocument("application/octet-stream")
-    ) { uri ->
-        uri ?: return@registerForActivityResult
-        val file = pendingBackupFile ?: return@registerForActivityResult
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                contentResolver.openOutputStream(uri)?.use { out ->
-                    file.inputStream().use { it.copyTo(out) }
-                }
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@SettingsActivity, getString(R.string.backup_success), Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@SettingsActivity, getString(R.string.backup_failed), Toast.LENGTH_SHORT).show()
-                }
-            }
-            pendingBackupFile = null
-        }
-    }
 
     private val restoreLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -137,9 +111,8 @@ class SettingsActivity : AppCompatActivity() {
     private fun startBackup(profile: String) {
         lifecycleScope.launch {
             try {
-                pendingBackupFile = viewModel.prepareBackupFile(applicationContext, profile)
-                val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                backupLauncher.launch("toepen_${profile.lowercase()}_$today.db")
+                val fileName = viewModel.backupToDownloads(applicationContext, profile)
+                Toast.makeText(this@SettingsActivity, getString(R.string.backup_success_file, fileName), Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, getString(R.string.backup_failed), Toast.LENGTH_SHORT).show()
             }

@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.kotlinx.coroutines.android)
 
+    implementation(libs.konfetti)
     implementation(libs.jetbrains.annotations)
 
     testImplementation(libs.junit)

@@ -46,6 +46,7 @@
     <string name="restore_work">Herstel Work</string>
     <string name="restore_kvw">Herstel KVW</string>
     <string name="backup_success">Back-up opgeslagen</string>
+    <string name="backup_success_file">Back-up opgeslagen als %1$s in Downloads</string>
     <string name="backup_failed">Back-up mislukt</string>
     <string name="restore_title">Herstel database</string>
     <string name="restore_success">Herstel geslaagd</string>
