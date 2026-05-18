@@ -240,9 +240,9 @@ class GameActivity : AppCompatActivity() {
                 Party(
                     angle = 315,
                     spread = 50,
-                    speed = 14f,
-                    maxSpeed = 30f,
-                    damping = 0.9f,
+                    speed = 30f,
+                    maxSpeed = 60f,
+                    damping = 0.95f,
                     colors = colors,
                     emitter = Emitter(duration = 3, TimeUnit.SECONDS).perSecond(40),
                     position = Position.Relative(0.0, 1.0)
@@ -250,9 +250,9 @@ class GameActivity : AppCompatActivity() {
                 Party(
                     angle = 225,
                     spread = 50,
-                    speed = 14f,
-                    maxSpeed = 30f,
-                    damping = 0.9f,
+                    speed = 30f,
+                    maxSpeed = 60f,
+                    damping = 0.95f,
                     colors = colors,
                     emitter = Emitter(duration = 3, TimeUnit.SECONDS).perSecond(40),
                     position = Position.Relative(1.0, 1.0)
