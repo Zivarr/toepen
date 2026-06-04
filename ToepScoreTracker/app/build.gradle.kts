@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -18,12 +20,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val keyProps = Properties().also { props ->
+        val f = rootProject.file("key.properties")
+        if (f.exists()) f.inputStream().use { props.load(it) }
+    }
+
     signingConfigs {
         create("release") {
-            storeFile = file("${rootProject.projectDir}/../.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+            storeFile = keyProps["storeFile"]?.let { file(it) }
+            storePassword = keyProps["storePassword"] as String?
+            keyAlias = keyProps["keyAlias"] as String?
+            keyPassword = keyProps["keyPassword"] as String?
         }
     }
 
