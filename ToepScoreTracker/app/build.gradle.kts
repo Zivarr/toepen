@@ -11,7 +11,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.toepscoretracker"
+        applicationId = "nl.twezeman.toepscoretracker"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
