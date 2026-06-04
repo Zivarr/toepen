@@ -10,6 +10,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.example.toepscoretracker.ProfileManager
 import com.example.toepscoretracker.database.AppDatabase
 import com.example.toepscoretracker.database.Game
 import com.example.toepscoretracker.repository.GameRepository
@@ -23,7 +24,8 @@ import java.util.Date
 import java.util.Locale
 
 class SettingsViewModel(
-    private val repositoryProvider: (String) -> GameRepository
+    private val repositoryProvider: (String) -> GameRepository,
+    private val profileListProvider: () -> List<String>
 ) : ViewModel() {
 
     fun deleteAll(profile: String) {
@@ -34,8 +36,7 @@ class SettingsViewModel(
 
     fun wipeAll() {
         viewModelScope.launch {
-            repositoryProvider("Work").deleteAll()
-            repositoryProvider("KVW").deleteAll()
+            profileListProvider().forEach { repositoryProvider(it).deleteAll() }
         }
     }
 
@@ -55,7 +56,7 @@ class SettingsViewModel(
         cursor.close()
         Log.d(TAG, "backupToDownloads: WAL checkpoint done")
 
-        val dbFile = context.getDatabasePath(dbNameFor(profile))
+        val dbFile = context.getDatabasePath(ProfileManager.dbNameFor(profile))
         Log.d(TAG, "backupToDownloads: dbFile=${dbFile.absolutePath}, exists=${dbFile.exists()}, size=${dbFile.length()}")
 
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -129,7 +130,5 @@ class SettingsViewModel(
 
     companion object {
         private const val TAG = "SettingsViewModel"
-        fun dbNameFor(profile: String) =
-            if (profile == "KVW") "toepen_database_kvw" else "toepen_database_work"
     }
 }

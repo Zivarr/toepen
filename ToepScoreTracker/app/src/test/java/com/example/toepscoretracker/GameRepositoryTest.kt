@@ -26,6 +26,8 @@ class GameRepositoryTest {
             override fun getAllGamesFlow(): Flow<List<Game>> = flowOf(games.toList())
             override suspend fun getAllGames(): List<Game> = games.toList()
             override suspend fun deleteAll() = Unit
+            override suspend fun deleteShortGames(maxDuration: Long) = Unit
+            override suspend fun countByTimestampAndPlayers(timestamp: String, playerNames: String): Int = 0
         }
         return GameRepository(dao)
     }

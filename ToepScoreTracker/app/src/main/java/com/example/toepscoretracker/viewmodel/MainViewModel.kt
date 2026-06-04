@@ -6,7 +6,8 @@ import com.example.toepscoretracker.repository.GameRepository
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val repositoryProvider: (String) -> GameRepository
+    private val repositoryProvider: (String) -> GameRepository,
+    private val profileListProvider: () -> List<String>
 ) : ViewModel() {
 
     fun deleteAll(profile: String) {
@@ -17,8 +18,7 @@ class MainViewModel(
 
     fun wipeAll() {
         viewModelScope.launch {
-            repositoryProvider("Work").deleteAll()
-            repositoryProvider("KVW").deleteAll()
+            profileListProvider().forEach { repositoryProvider(it).deleteAll() }
         }
     }
 }

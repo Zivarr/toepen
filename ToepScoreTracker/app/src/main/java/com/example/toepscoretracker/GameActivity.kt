@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 class GameActivity : AppCompatActivity() {
 
     private val viewModel: GameViewModel by viewModels {
-        val profile = intent.getStringExtra("profile") ?: "Work"
+        val profile = intent.getStringExtra("profile") ?: "Vrienden"
         val playerNames = intent.getStringArrayExtra("playerNames")?.toList() ?: emptyList()
         val maxPenaltyPoints = intent.getIntExtra("maxPenaltyPoints", 15)
         GameViewModelFactory(

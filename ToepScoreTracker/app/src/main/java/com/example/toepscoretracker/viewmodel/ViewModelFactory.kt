@@ -26,17 +26,19 @@ class RepositoryViewModelFactory(
 }
 
 class MainViewModelFactory(
-    private val repositoryProvider: (String) -> GameRepository
+    private val repositoryProvider: (String) -> GameRepository,
+    private val profileListProvider: () -> List<String>
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        MainViewModel(repositoryProvider) as T
+        MainViewModel(repositoryProvider, profileListProvider) as T
 }
 
 class SettingsViewModelFactory(
-    private val repositoryProvider: (String) -> GameRepository
+    private val repositoryProvider: (String) -> GameRepository,
+    private val profileListProvider: () -> List<String>
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        SettingsViewModel(repositoryProvider) as T
+        SettingsViewModel(repositoryProvider, profileListProvider) as T
 }

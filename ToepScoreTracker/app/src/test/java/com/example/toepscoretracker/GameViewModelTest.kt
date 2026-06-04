@@ -7,6 +7,7 @@ import com.example.toepscoretracker.viewmodel.GameEvent
 import com.example.toepscoretracker.viewmodel.GameViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -33,6 +34,8 @@ class GameViewModelTest {
         override fun getAllGamesFlow(): Flow<List<Game>> = flowOf(emptyList())
         override suspend fun getAllGames(): List<Game> = emptyList()
         override suspend fun deleteAll() = Unit
+        override suspend fun deleteShortGames(maxDuration: Long) = Unit
+        override suspend fun countByTimestampAndPlayers(timestamp: String, playerNames: String): Int = 0
     }
 
     private val repository = GameRepository(fakeDao)
@@ -66,12 +69,19 @@ class GameViewModelTest {
     }
 
     @Test
-    fun `applyPenalty resets currentRoundPoints to 1`() {
+    fun `applyPenalty adds currentRoundPoints to player score`() {
         viewModel.incrementKlop()
         viewModel.incrementKlop()
         assertEquals(3, viewModel.uiState.value.currentRoundPoints)
         viewModel.applyPenalty("Alice")
         assertEquals(3, viewModel.uiState.value.scores["Alice"])
+    }
+
+    @Test
+    fun `nextRound resets currentRoundPoints to 1`() {
+        viewModel.incrementKlop()
+        viewModel.incrementKlop()
+        viewModel.nextRound()
         assertEquals(1, viewModel.uiState.value.currentRoundPoints)
     }
 
@@ -104,7 +114,7 @@ class GameViewModelTest {
     @Test
     fun `undo emits UndoEmpty event when history is empty`() = runTest {
         var receivedEvent: GameEvent? = null
-        val job = kotlinx.coroutines.launch(testDispatcher) {
+        val job = launch(testDispatcher) {
             viewModel.events.collect { receivedEvent = it }
         }
         viewModel.undo()

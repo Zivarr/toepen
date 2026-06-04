@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.toepscoretracker.ProfileManager
 
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -56,36 +57,24 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun gameDao(): GameDao
 
     companion object {
-        @Volatile
-        private var WORK_INSTANCE: AppDatabase? = null
-        @Volatile
-        private var KVW_INSTANCE: AppDatabase? = null
+        private val instances = mutableMapOf<String, AppDatabase>()
 
         fun getDatabase(context: Context, profile: String): AppDatabase {
-            return if (profile == "KVW") {
-                KVW_INSTANCE ?: synchronized(this) {
-                    val instance = Room.databaseBuilder(
-                        context.applicationContext,
-                        AppDatabase::class.java,
-                        "toepen_database_kvw"
-                    )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
-                    .build()
-                    KVW_INSTANCE = instance
-                    instance
-                }
-            } else {
-                WORK_INSTANCE ?: synchronized(this) {
-                    val instance = Room.databaseBuilder(
-                        context.applicationContext,
-                        AppDatabase::class.java,
-                        "toepen_database_work"
-                    )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
-                    .build()
-                    WORK_INSTANCE = instance
-                    instance
-                }
+            return instances[profile] ?: synchronized(this) {
+                instances[profile] ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    ProfileManager.dbNameFor(profile)
+                )
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .build()
+                .also { instances[profile] = it }
+            }
+        }
+
+        fun closeAndRemove(profile: String) {
+            synchronized(this) {
+                instances.remove(profile)?.close()
             }
         }
     }

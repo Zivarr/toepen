@@ -19,7 +19,7 @@ class PlayerSetupActivity : AppCompatActivity() {
         setContentView(R.layout.activity_player_setup)
 
         val playerCount = intent.getIntExtra("playerCount", 0)
-        val profile = intent.getStringExtra("profile") ?: "Work"
+        val profile = intent.getStringExtra("profile") ?: "Vrienden"
         
         val llPlayerNames = findViewById<LinearLayout>(R.id.llPlayerNames)
         val etMaxPoints = findViewById<EditText>(R.id.etMaxPoints)
@@ -27,7 +27,7 @@ class PlayerSetupActivity : AppCompatActivity() {
 
         // Laad de laatste instelling voor dit profiel
         val sharedPrefs = getSharedPreferences("ToepenSettings_$profile", Context.MODE_PRIVATE)
-        val lastMaxPoints = sharedPrefs.getInt("lastMaxPoints", if (profile == "KVW") 15 else 10)
+        val lastMaxPoints = sharedPrefs.getInt("lastMaxPoints", 10)
         etMaxPoints.setText(lastMaxPoints.toString())
 
         llPlayerNames.removeAllViews()

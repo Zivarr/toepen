@@ -13,28 +13,23 @@ import android.widget.Toast
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var spinnerProfile: Spinner
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        ProfileManager.runMigrationIfNeeded(this)
 
         val etPlayerCount = findViewById<EditText>(R.id.etPlayerCount)
         val btnNext = findViewById<Button>(R.id.btnNext)
         val btnViewResults = findViewById<Button>(R.id.btnViewResults)
         val btnLeaderboard = findViewById<Button>(R.id.btnLeaderboard)
         val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
-        val spinnerProfile = findViewById<Spinner>(R.id.spinnerProfile)
+        val btnManageProfiles = findViewById<Button>(R.id.btnManageProfiles)
+        spinnerProfile = findViewById(R.id.spinnerProfile)
 
-        val profiles = arrayOf("Work", "KVW")
-        val adapter = ArrayAdapter(this, R.layout.spinner_item, profiles)
-        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        spinnerProfile.adapter = adapter
-
-        val sharedPrefs = getSharedPreferences("ToepenSettings", Context.MODE_PRIVATE)
-        val lastProfile = sharedPrefs.getString("lastProfile", "Work")
-        val lastProfileIndex = profiles.indexOf(lastProfile)
-        if (lastProfileIndex >= 0) {
-            spinnerProfile.setSelection(lastProfileIndex)
-        }
+        refreshSpinner()
 
         btnNext.setOnClickListener {
             val playerCount = etPlayerCount.text.toString()
@@ -44,7 +39,8 @@ class MainActivity : AppCompatActivity() {
                 count < 2 || count > 8 -> Toast.makeText(this, getString(R.string.player_count_out_of_range), Toast.LENGTH_SHORT).show()
                 else -> {
                     val selectedProfile = spinnerProfile.selectedItem.toString()
-                    sharedPrefs.edit().putString("lastProfile", selectedProfile).apply()
+                    getSharedPreferences("ToepenSettings", Context.MODE_PRIVATE)
+                        .edit().putString("lastProfile", selectedProfile).apply()
                     startActivity(Intent(this, PlayerSetupActivity::class.java).apply {
                         putExtra("playerCount", count)
                         putExtra("profile", selectedProfile)
@@ -73,5 +69,26 @@ class MainActivity : AppCompatActivity() {
                 putExtra("profile", selectedProfile)
             })
         }
+
+        btnManageProfiles.setOnClickListener {
+            startActivity(Intent(this, ManageProfilesActivity::class.java))
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshSpinner()
+    }
+
+    private fun refreshSpinner() {
+        val profiles = ProfileManager.getProfiles(this)
+        val adapter = ArrayAdapter(this, R.layout.spinner_item, profiles)
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+        spinnerProfile.adapter = adapter
+
+        val lastProfile = getSharedPreferences("ToepenSettings", Context.MODE_PRIVATE)
+            .getString("lastProfile", "Vrienden")
+        val idx = profiles.indexOf(lastProfile)
+        spinnerProfile.setSelection(if (idx >= 0) idx else 0)
     }
 }

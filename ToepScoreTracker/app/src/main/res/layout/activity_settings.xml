@@ -41,30 +41,13 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/max_points_work_label"
+            android:text="@string/max_points_current_label"
             android:textSize="14sp"
             android:textColor="@color/white"
             android:layout_marginBottom="4dp" />
 
         <EditText
-            android:id="@+id/etMaxPointsWork"
-            android:layout_width="120dp"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:textColor="@color/white"
-            android:textColorHint="#BDBDBD"
-            android:layout_marginBottom="12dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/max_points_kvw_label"
-            android:textSize="14sp"
-            android:textColor="@color/white"
-            android:layout_marginBottom="4dp" />
-
-        <EditText
-            android:id="@+id/etMaxPointsKvw"
+            android:id="@+id/etMaxPoints"
             android:layout_width="120dp"
             android:layout_height="wrap_content"
             android:inputType="number"
@@ -90,34 +73,18 @@
             android:layout_marginBottom="12dp" />
 
         <Button
-            android:id="@+id/btnBackupWork"
+            android:id="@+id/btnBackup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/backup_work"
+            android:text="@string/backup_current"
             android:padding="12dp"
             android:layout_marginBottom="8dp" />
 
         <Button
-            android:id="@+id/btnRestoreWork"
+            android:id="@+id/btnRestore"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/restore_work"
-            android:padding="12dp"
-            android:layout_marginBottom="8dp" />
-
-        <Button
-            android:id="@+id/btnBackupKvw"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/backup_kvw"
-            android:padding="12dp"
-            android:layout_marginBottom="8dp" />
-
-        <Button
-            android:id="@+id/btnRestoreKvw"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/restore_kvw"
+            android:text="@string/restore_current"
             android:padding="12dp"
             android:layout_marginBottom="24dp" />
 

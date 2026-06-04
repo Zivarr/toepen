@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 class LeaderboardActivity : AppCompatActivity() {
 
     private val viewModel: LeaderboardViewModel by viewModels {
-        val profile = intent.getStringExtra("profile") ?: "Work"
+        val profile = intent.getStringExtra("profile") ?: "Vrienden"
         RepositoryViewModelFactory(
             GameRepository(AppDatabase.getDatabase(this, profile).gameDao())
         )
@@ -29,7 +29,7 @@ class LeaderboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_leaderboard)
 
-        val profile = intent.getStringExtra("profile") ?: "Work"
+        val profile = intent.getStringExtra("profile") ?: "Vrienden"
         findViewById<TextView>(R.id.tvLeaderboardTitle).text =
             getString(R.string.leaderboard_title, profile)
 

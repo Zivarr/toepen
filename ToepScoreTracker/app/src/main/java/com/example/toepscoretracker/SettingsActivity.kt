@@ -24,9 +24,12 @@ import java.io.File
 class SettingsActivity : AppCompatActivity() {
 
     private val viewModel: SettingsViewModel by viewModels {
-        SettingsViewModelFactory { profile ->
-            GameRepository(AppDatabase.getDatabase(this, profile).gameDao())
-        }
+        SettingsViewModelFactory(
+            repositoryProvider = { profile ->
+                GameRepository(AppDatabase.getDatabase(this, profile).gameDao())
+            },
+            profileListProvider = { ProfileManager.getProfiles(this) }
+        )
     }
 
     private var pendingRestoreProfile: String? = null
@@ -58,32 +61,25 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        val profile = intent.getStringExtra("profile") ?: "Work"
+        val profile = intent.getStringExtra("profile") ?: "Vrienden"
 
         findViewById<TextView>(R.id.tvCurrentProfile).text =
             getString(R.string.current_profile, profile)
 
-        val etMaxPointsWork = findViewById<EditText>(R.id.etMaxPointsWork)
-        val etMaxPointsKvw = findViewById<EditText>(R.id.etMaxPointsKvw)
-        val prefsWork = getSharedPreferences("ToepenSettings_Work", Context.MODE_PRIVATE)
-        val prefsKvw = getSharedPreferences("ToepenSettings_KVW", Context.MODE_PRIVATE)
-        etMaxPointsWork.setText(prefsWork.getInt("lastMaxPoints", 10).toString())
-        etMaxPointsKvw.setText(prefsKvw.getInt("lastMaxPoints", 15).toString())
+        val prefs = getSharedPreferences("ToepenSettings_$profile", Context.MODE_PRIVATE)
+        val etMaxPoints = findViewById<EditText>(R.id.etMaxPoints)
+        etMaxPoints.setText(prefs.getInt("lastMaxPoints", 10).toString())
 
         findViewById<Button>(R.id.btnSaveMaxPoints).setOnClickListener {
-            val workPoints = etMaxPointsWork.text.toString().toIntOrNull()
-            val kvwPoints = etMaxPointsKvw.text.toString().toIntOrNull()
-            if (workPoints != null && kvwPoints != null) {
-                prefsWork.edit().putInt("lastMaxPoints", workPoints).apply()
-                prefsKvw.edit().putInt("lastMaxPoints", kvwPoints).apply()
+            val pts = etMaxPoints.text.toString().toIntOrNull()
+            if (pts != null && pts > 0) {
+                prefs.edit().putInt("lastMaxPoints", pts).apply()
                 Toast.makeText(this, getString(R.string.settings_saved), Toast.LENGTH_SHORT).show()
             }
         }
 
-        findViewById<Button>(R.id.btnBackupWork).setOnClickListener { startBackup("Work") }
-        findViewById<Button>(R.id.btnBackupKvw).setOnClickListener { startBackup("KVW") }
-        findViewById<Button>(R.id.btnRestoreWork).setOnClickListener { startRestore("Work") }
-        findViewById<Button>(R.id.btnRestoreKvw).setOnClickListener { startRestore("KVW") }
+        findViewById<Button>(R.id.btnBackup).setOnClickListener { startBackup(profile) }
+        findViewById<Button>(R.id.btnRestore).setOnClickListener { startRestore(profile) }
 
         findViewById<Button>(R.id.btnDeleteShortGames).setOnClickListener {
             showConfirmDialog(
@@ -121,10 +117,6 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    companion object {
-        private const val TAG = "SettingsActivity"
-    }
-
     private fun startRestore(profile: String) {
         showConfirmDialog(
             getString(R.string.restore_title),
@@ -142,5 +134,9 @@ class SettingsActivity : AppCompatActivity() {
             .setPositiveButton(R.string.yes) { _, _ -> onConfirm() }
             .setNegativeButton(R.string.no, null)
             .show()
+    }
+
+    companion object {
+        private const val TAG = "SettingsActivity"
     }
 }

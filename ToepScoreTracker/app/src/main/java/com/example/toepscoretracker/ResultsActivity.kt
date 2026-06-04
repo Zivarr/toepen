@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 class ResultsActivity : AppCompatActivity() {
 
     private val viewModel: ResultsViewModel by viewModels {
-        val profile = intent.getStringExtra("profile") ?: "Work"
+        val profile = intent.getStringExtra("profile") ?: "Vrienden"
         RepositoryViewModelFactory(
             GameRepository(AppDatabase.getDatabase(this, profile).gameDao())
         )
@@ -32,7 +32,7 @@ class ResultsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_results)
 
-        val profile = intent.getStringExtra("profile") ?: "Work"
+        val profile = intent.getStringExtra("profile") ?: "Vrienden"
 
         findViewById<ImageButton>(R.id.btnSettings).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java).apply {
