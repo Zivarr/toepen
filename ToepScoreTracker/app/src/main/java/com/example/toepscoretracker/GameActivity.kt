@@ -196,7 +196,7 @@ class GameActivity : AppCompatActivity() {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    topMargin = (2 * dp).toInt()
+                    topMargin = (8 * dp).toInt()
                 }
                 addView(foldButton)
                 addView(boerButton)
