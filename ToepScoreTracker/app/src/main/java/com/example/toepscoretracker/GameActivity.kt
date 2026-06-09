@@ -143,19 +143,23 @@ class GameActivity : AppCompatActivity() {
         viewModel.playerNames.forEach { name ->
             val textView = TextView(this).apply {
                 textSize = 20f
-                setPadding(0, (8 * dp).toInt(), 0, (8 * dp).toInt())
+                setPadding(0, (4 * dp).toInt(), 0, (4 * dp).toInt())
                 gravity = android.view.Gravity.CENTER
                 setTextColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+                )
             }
 
             val penaltyButton = MaterialButton(this).apply {
+                insetTop = 0
+                insetBottom = 0
                 text = getString(R.string.penalty_button, name)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    topMargin = (8 * dp).toInt()
-                    bottomMargin = (4 * dp).toInt()
+                    topMargin = (4 * dp).toInt()
                 }
                 setOnClickListener { viewModel.applyPenalty(name) }
             }
@@ -163,6 +167,8 @@ class GameActivity : AppCompatActivity() {
             val outlinedCtx = ContextThemeWrapper(this, com.google.android.material.R.style.Widget_Material3_Button_OutlinedButton)
 
             val foldButton = MaterialButton(outlinedCtx, null, 0).apply {
+                insetTop = 0
+                insetBottom = 0
                 text = getString(R.string.fold_button, 0)
                 setTextColor(whiteColors)
                 strokeColor = whiteColors
@@ -173,6 +179,8 @@ class GameActivity : AppCompatActivity() {
             }
 
             val boerButton = MaterialButton(outlinedCtx, null, 0).apply {
+                insetTop = 0
+                insetBottom = 0
                 text = getString(R.string.jack_button)
                 setTextColor(whiteColors)
                 strokeColor = whiteColors
@@ -188,7 +196,7 @@ class GameActivity : AppCompatActivity() {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    topMargin = (4 * dp).toInt()
+                    topMargin = (2 * dp).toInt()
                 }
                 addView(foldButton)
                 addView(boerButton)
