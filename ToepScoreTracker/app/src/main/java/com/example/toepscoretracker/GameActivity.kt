@@ -194,16 +194,17 @@ class GameActivity : AppCompatActivity() {
                 addView(boerButton)
             }
 
-            val cardPadding = (12 * dp).toInt()
+            val cardPadding = (8 * dp).toInt()
             val playerCard = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 setBackgroundResource(R.drawable.player_card_bg)
                 setPadding(cardPadding, cardPadding, cardPadding, cardPadding)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
+                    0,
+                    1f
                 ).apply {
-                    bottomMargin = (12 * dp).toInt()
+                    bottomMargin = (6 * dp).toInt()
                 }
                 addView(textView)
                 addView(penaltyButton)
