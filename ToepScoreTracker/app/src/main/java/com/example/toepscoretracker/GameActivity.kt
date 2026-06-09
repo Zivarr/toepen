@@ -1,12 +1,14 @@
 package com.example.toepscoretracker
 
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.Paint
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ContextThemeWrapper
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -23,6 +25,7 @@ import com.example.toepscoretracker.viewmodel.GameViewModel
 import com.example.toepscoretracker.viewmodel.GameViewModelFactory
 import android.util.Log
 import androidx.activity.OnBackPressedCallback
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -45,15 +48,15 @@ class GameActivity : AppCompatActivity() {
 
     private data class PlayerRowViews(
         val scoreText: TextView,
-        val foldButton: Button,
-        val penaltyButton: Button,
-        val boerButton: Button
+        val foldButton: MaterialButton,
+        val penaltyButton: MaterialButton,
+        val boerButton: MaterialButton
     )
 
     private val playerViews = mutableMapOf<String, PlayerRowViews>()
-    private lateinit var btnKlop: Button
-    private lateinit var btnNextRound: Button
-    private lateinit var btnEndGame: Button
+    private lateinit var btnKlop: MaterialButton
+    private lateinit var btnNextRound: MaterialButton
+    private lateinit var btnEndGame: MaterialButton
     private lateinit var konfettiView: KonfettiView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,12 +75,12 @@ class GameActivity : AppCompatActivity() {
         btnNextRound = findViewById(R.id.btnNextRound)
         btnNextRound.setOnClickListener { viewModel.nextRound() }
 
-        findViewById<Button>(R.id.btnUndo).setOnClickListener { viewModel.undo() }
+        findViewById<MaterialButton>(R.id.btnUndo).setOnClickListener { viewModel.undo() }
 
         btnEndGame = findViewById(R.id.btnEndGame)
         btnEndGame.setOnClickListener { viewModel.endGame() }
 
-        findViewById<Button>(R.id.btnBackToStart).setOnClickListener {
+        findViewById<MaterialButton>(R.id.btnBackToStart).setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
@@ -134,53 +137,80 @@ class GameActivity : AppCompatActivity() {
     private fun buildPlayerViews() {
         val llPlayers = findViewById<LinearLayout>(R.id.llPlayers)
         llPlayers.removeAllViews()
+        val dp = resources.displayMetrics.density
+        val whiteColors = ColorStateList.valueOf(Color.WHITE)
 
         viewModel.playerNames.forEach { name ->
             val textView = TextView(this).apply {
                 textSize = 20f
-                setPadding(0, 16, 0, 8)
+                setPadding(0, (8 * dp).toInt(), 0, (8 * dp).toInt())
                 gravity = android.view.Gravity.CENTER
+                setTextColor(Color.WHITE)
             }
 
-            val foldButton = Button(this).apply {
-                text = getString(R.string.fold_button, 0)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                setOnClickListener { viewModel.applyFold(name) }
-            }
-
-            val penaltyButton = Button(this).apply {
+            val penaltyButton = MaterialButton(this).apply {
                 text = getString(R.string.penalty_button, name)
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                setOnClickListener { viewModel.applyPenalty(name) }
-            }
-
-            val boerButton = Button(this).apply {
-                text = getString(R.string.jack_button)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                setOnClickListener { viewModel.applyBoer(name) }
-            }
-
-            val buttonContainer = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
-                )
+                ).apply {
+                    topMargin = (8 * dp).toInt()
+                    bottomMargin = (4 * dp).toInt()
+                }
+                setOnClickListener { viewModel.applyPenalty(name) }
+            }
+
+            val outlinedCtx = ContextThemeWrapper(this, com.google.android.material.R.style.Widget_Material3_Button_OutlinedButton)
+
+            val foldButton = MaterialButton(outlinedCtx, null, 0).apply {
+                text = getString(R.string.fold_button, 0)
+                setTextColor(whiteColors)
+                strokeColor = whiteColors
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                    marginEnd = (4 * dp).toInt()
+                }
+                setOnClickListener { viewModel.applyFold(name) }
+            }
+
+            val boerButton = MaterialButton(outlinedCtx, null, 0).apply {
+                text = getString(R.string.jack_button)
+                setTextColor(whiteColors)
+                strokeColor = whiteColors
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                    marginStart = (4 * dp).toInt()
+                }
+                setOnClickListener { viewModel.applyBoer(name) }
+            }
+
+            val secondRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = (4 * dp).toInt()
+                }
                 addView(foldButton)
-                addView(penaltyButton)
                 addView(boerButton)
             }
 
-            llPlayers.addView(textView)
-            llPlayers.addView(buttonContainer)
+            val cardPadding = (12 * dp).toInt()
+            val playerCard = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundResource(R.drawable.player_card_bg)
+                setPadding(cardPadding, cardPadding, cardPadding, cardPadding)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = (12 * dp).toInt()
+                }
+                addView(textView)
+                addView(penaltyButton)
+                addView(secondRow)
+            }
 
+            llPlayers.addView(playerCard)
             playerViews[name] = PlayerRowViews(textView, foldButton, penaltyButton, boerButton)
         }
     }
@@ -222,7 +252,7 @@ class GameActivity : AppCompatActivity() {
         if (llSummaryLayout.visibility == View.VISIBLE) return
         val tvWinner = findViewById<TextView>(R.id.tvWinner)
         val tvDuration = findViewById<TextView>(R.id.tvDuration)
-        val btnShare = findViewById<Button>(R.id.btnShare)
+        val btnShare = findViewById<MaterialButton>(R.id.btnShare)
 
         val durationText = DurationFormatter.format(durationMillis)
         tvWinner.text = getString(R.string.player_won, winnerName)
