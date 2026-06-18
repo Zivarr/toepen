@@ -1,5 +1,7 @@
 package com.example.toepscoretracker
 
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -35,8 +37,9 @@ import java.util.concurrent.TimeUnit
 
 class GameActivity : AppCompatActivity() {
 
+    private val profile: String by lazy { intent.getStringExtra("profile") ?: "Vrienden" }
+
     private val viewModel: GameViewModel by viewModels {
-        val profile = intent.getStringExtra("profile") ?: "Vrienden"
         val playerNames = intent.getStringArrayExtra("playerNames")?.toList() ?: emptyList()
         val maxPenaltyPoints = intent.getIntExtra("maxPenaltyPoints", 15)
         GameViewModelFactory(
@@ -57,6 +60,7 @@ class GameActivity : AppCompatActivity() {
     private lateinit var btnKlop: MaterialButton
     private lateinit var btnNextRound: MaterialButton
     private lateinit var btnEndGame: MaterialButton
+    private lateinit var tvElapsedTime: TextView
     private lateinit var konfettiView: KonfettiView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,6 +70,7 @@ class GameActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         konfettiView = findViewById(R.id.konfettiView)
+        tvElapsedTime = findViewById(R.id.tvElapsedTime)
         btnKlop = findViewById(R.id.btnKlop)
 
         buildPlayerViews()
@@ -105,6 +110,14 @@ class GameActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     updateUI(state)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.elapsedSeconds.collect { seconds ->
+                    tvElapsedTime.text = DurationFormatter.format(seconds * 1000)
                 }
             }
         }
@@ -161,7 +174,19 @@ class GameActivity : AppCompatActivity() {
                 ).apply {
                     topMargin = (4 * dp).toInt()
                 }
-                setOnClickListener { viewModel.applyPenalty(name) }
+                setOnClickListener {
+                    val confirmEnabled = getSharedPreferences("ToepenSettings_$profile", Context.MODE_PRIVATE)
+                        .getBoolean("confirmPenalty", false)
+                    if (confirmEnabled) {
+                        AlertDialog.Builder(this@GameActivity)
+                            .setMessage(getString(R.string.confirm_penalty_message, name))
+                            .setPositiveButton(R.string.yes) { _, _ -> viewModel.applyPenalty(name) }
+                            .setNegativeButton(R.string.no, null)
+                            .show()
+                    } else {
+                        viewModel.applyPenalty(name)
+                    }
+                }
             }
 
             val outlinedCtx = ContextThemeWrapper(this, com.google.android.material.R.style.Widget_Material3_Button_OutlinedButton)

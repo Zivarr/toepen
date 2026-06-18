@@ -26,6 +26,34 @@ object ProfileManager {
         saveProfiles(context, current)
     }
 
+    fun renameProfile(context: Context, oldName: String, newName: String) {
+        val current = getProfiles(context).toMutableList()
+        val idx = current.indexOfFirst { it.equals(oldName, ignoreCase = true) }
+        if (idx < 0) return
+        current[idx] = newName
+        saveProfiles(context, current)
+
+        val oldPrefs = context.getSharedPreferences("ToepenSettings_$oldName", Context.MODE_PRIVATE)
+        val newPrefs = context.getSharedPreferences("ToepenSettings_$newName", Context.MODE_PRIVATE)
+        newPrefs.edit().apply {
+            oldPrefs.all.forEach { (k, v) ->
+                when (v) {
+                    is Int -> putInt(k, v)
+                    is Boolean -> putBoolean(k, v)
+                    is String -> putString(k, v)
+                    else -> Unit
+                }
+            }
+        }.apply()
+        oldPrefs.edit().clear().apply()
+        context.deleteSharedPreferences("ToepenSettings_$oldName")
+
+        val globalPrefs = context.getSharedPreferences("ToepenSettings", Context.MODE_PRIVATE)
+        if (globalPrefs.getString("lastProfile", null) == oldName) {
+            globalPrefs.edit().putString("lastProfile", newName).apply()
+        }
+    }
+
     fun dbNameFor(profile: String): String =
         "toepen_database_${profile.trim().lowercase().replace(" ", "_")}"
 

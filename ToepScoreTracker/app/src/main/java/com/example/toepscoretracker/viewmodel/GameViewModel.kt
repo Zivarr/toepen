@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.toepscoretracker.database.Game
 import com.example.toepscoretracker.repository.GameRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -45,10 +46,23 @@ class GameViewModel(
     private val _events = MutableSharedFlow<GameEvent>()
     val events: SharedFlow<GameEvent> = _events.asSharedFlow()
 
+    private val _elapsedSeconds = MutableStateFlow(0L)
+    val elapsedSeconds: StateFlow<Long> = _elapsedSeconds.asStateFlow()
+
     private val history = Stack<Map<String, Int>>()
     private val startTime = System.currentTimeMillis()
     private var savedOnGameOver = false
     private val boerCounts: MutableMap<String, Int> = playerNames.associateWith { 0 }.toMutableMap()
+
+    init {
+        viewModelScope.launch {
+            while (true) {
+                delay(1000)
+                if (_uiState.value.isGameOver) break
+                _elapsedSeconds.value = (System.currentTimeMillis() - startTime) / 1000
+            }
+        }
+    }
 
     fun incrementKlop() {
         _uiState.value = _uiState.value.copy(

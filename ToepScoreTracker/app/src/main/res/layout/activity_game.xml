@@ -30,6 +30,17 @@
                 android:textColor="@color/white"
                 android:layout_marginEnd="16dp"/>
 
+            <TextView
+                android:id="@+id/tvElapsedTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="00:00:00"
+                android:textSize="14sp"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:layout_marginEnd="8dp"/>
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnKlop"
                 style="@style/Widget.Material3.Button"

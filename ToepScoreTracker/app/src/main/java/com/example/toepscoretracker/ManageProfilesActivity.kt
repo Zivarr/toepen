@@ -53,6 +53,11 @@ class ManageProfilesActivity : AppCompatActivity() {
                 ).apply { gravity = Gravity.CENTER_VERTICAL }
             }
 
+            val renameBtn = Button(this).apply {
+                text = getString(R.string.rename_profile)
+                setOnClickListener { showRenameDialog(name) }
+            }
+
             val deleteBtn = Button(this).apply {
                 text = getString(R.string.delete_profile)
                 isEnabled = profiles.size > 1
@@ -60,6 +65,7 @@ class ManageProfilesActivity : AppCompatActivity() {
             }
 
             row.addView(nameView)
+            row.addView(renameBtn)
             row.addView(deleteBtn)
             llProfileList.addView(row)
         }
@@ -80,6 +86,38 @@ class ManageProfilesActivity : AppCompatActivity() {
                 renderProfileList()
             }
         }
+    }
+
+    private fun showRenameDialog(currentName: String) {
+        val input = EditText(this).apply {
+            setText(currentName)
+            selectAll()
+            hint = getString(R.string.rename_dialog_hint)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.rename_profile))
+            .setView(input)
+            .setPositiveButton(R.string.yes) { _, _ ->
+                val newName = input.text.toString().trim()
+                when {
+                    newName.isEmpty() ->
+                        Toast.makeText(this, getString(R.string.rename_profile_empty), Toast.LENGTH_SHORT).show()
+                    newName.length > 30 ->
+                        Toast.makeText(this, getString(R.string.profile_name_too_long), Toast.LENGTH_SHORT).show()
+                    newName.equals(currentName, ignoreCase = true) -> Unit
+                    ProfileManager.getProfiles(this).any { it.equals(newName, ignoreCase = true) } ->
+                        Toast.makeText(this, getString(R.string.rename_profile_duplicate), Toast.LENGTH_SHORT).show()
+                    else -> executeRename(currentName, newName)
+                }
+            }
+            .setNegativeButton(R.string.no, null)
+            .show()
+    }
+
+    private fun executeRename(oldName: String, newName: String) {
+        AppDatabase.renameDatabase(this, oldName, newName)
+        ProfileManager.renameProfile(this, oldName, newName)
+        renderProfileList()
     }
 
     private fun confirmDelete(name: String) {

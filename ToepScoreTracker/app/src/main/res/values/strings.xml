@@ -60,4 +60,10 @@
     <string name="confirm_restore">Weet je zeker dat je wilt herstellen? Bestaande spellen blijven behouden, nieuwe spellen worden toegevoegd.</string>
     <string name="current_profile">Huidig profiel: %s</string>
     <string name="clear_history_current">Wis geschiedenis (huidig profiel)</string>
+    <string name="setting_confirm_penalty">Bevestig strafpunt</string>
+    <string name="confirm_penalty_message">Strafpunt toevoegen aan %s?</string>
+    <string name="rename_profile">Naam wijzigen</string>
+    <string name="rename_dialog_hint">Nieuwe naam</string>
+    <string name="rename_profile_empty">Naam mag niet leeg zijn</string>
+    <string name="rename_profile_duplicate">Er bestaat al een profiel met deze naam</string>
 </resources>

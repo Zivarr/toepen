@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.toepscoretracker.database.AppDatabase
 import com.example.toepscoretracker.repository.GameRepository
@@ -76,6 +77,12 @@ class SettingsActivity : AppCompatActivity() {
                 prefs.edit().putInt("lastMaxPoints", pts).apply()
                 Toast.makeText(this, getString(R.string.settings_saved), Toast.LENGTH_SHORT).show()
             }
+        }
+
+        val switchConfirmPenalty = findViewById<SwitchCompat>(R.id.switchConfirmPenalty)
+        switchConfirmPenalty.isChecked = prefs.getBoolean("confirmPenalty", false)
+        switchConfirmPenalty.setOnCheckedChangeListener { _, checked ->
+            prefs.edit().putBoolean("confirmPenalty", checked).apply()
         }
 
         findViewById<Button>(R.id.btnBackup).setOnClickListener { startBackup(profile) }

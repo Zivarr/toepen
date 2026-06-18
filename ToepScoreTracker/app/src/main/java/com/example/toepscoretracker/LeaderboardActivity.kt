@@ -39,9 +39,9 @@ class LeaderboardActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.winCounts.collect { winCounts ->
+                viewModel.playerStats.collect { stats ->
                     llLeaderboard.removeAllViews()
-                    if (winCounts.isEmpty()) {
+                    if (stats.isEmpty()) {
                         llLeaderboard.addView(TextView(this@LeaderboardActivity).apply {
                             text = "Nog geen winnaars bekend."
                             textSize = 18f
@@ -49,12 +49,23 @@ class LeaderboardActivity : AppCompatActivity() {
                             gravity = Gravity.CENTER
                         })
                     } else {
-                        winCounts.forEachIndexed { index, (name, wins) ->
+                        stats.forEachIndexed { index, s ->
+                            val winRatePct = (s.winRate * 100).toInt()
+                            val line1 = "${index + 1}. ${s.name}  —  ${s.wins} winst(en)"
+                            val line2 = "${s.gamesPlayed} gespeeld · ${winRatePct}% winstrate · ${s.totalBoer}× Boer"
+
                             llLeaderboard.addView(TextView(this@LeaderboardActivity).apply {
-                                text = "${index + 1}. $name: $wins winst(en)"
+                                text = line1
                                 textSize = 20f
                                 setTextColor(getColor(R.color.white))
-                                setPadding(0, 8, 0, 8)
+                                setPadding(0, 8, 0, 0)
+                                gravity = Gravity.CENTER
+                            })
+                            llLeaderboard.addView(TextView(this@LeaderboardActivity).apply {
+                                text = line2
+                                textSize = 14f
+                                setTextColor(0xFFBDBDBD.toInt())
+                                setPadding(0, 2, 0, 12)
                                 gravity = Gravity.CENTER
                             })
                         }

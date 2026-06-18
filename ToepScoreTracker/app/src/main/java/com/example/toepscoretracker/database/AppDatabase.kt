@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.toepscoretracker.ProfileManager
+import java.io.File
 
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -76,6 +77,15 @@ abstract class AppDatabase : RoomDatabase() {
             synchronized(this) {
                 instances.remove(profile)?.close()
             }
+        }
+
+        fun renameDatabase(context: Context, oldName: String, newName: String) {
+            closeAndRemove(oldName)
+            val oldFile = context.getDatabasePath(ProfileManager.dbNameFor(oldName))
+            val newFile = context.getDatabasePath(ProfileManager.dbNameFor(newName))
+            oldFile.renameTo(newFile)
+            File("${oldFile.absolutePath}-wal").renameTo(File("${newFile.absolutePath}-wal"))
+            File("${oldFile.absolutePath}-shm").renameTo(File("${newFile.absolutePath}-shm"))
         }
     }
 }
