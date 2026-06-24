@@ -153,26 +153,40 @@ class GameActivity : AppCompatActivity() {
         val dp = resources.displayMetrics.density
         val whiteColors = ColorStateList.valueOf(Color.WHITE)
 
+        val compact = viewModel.playerNames.size >= 5
+        val scoreTextSize    = if (compact) 13f else 20f
+        val scoreTextPad     = if (compact) 0 else (4 * dp).toInt()
+        val cardPadding      = if (compact) (4 * dp).toInt() else (8 * dp).toInt()
+        val penaltyTopMargin = if (compact) (2 * dp).toInt() else (4 * dp).toInt()
+        val secondRowTop     = if (compact) (3 * dp).toInt() else (8 * dp).toInt()
+        val cardBottomMargin = if (compact) (3 * dp).toInt() else (6 * dp).toInt()
+
+        if (compact) {
+            llPlayers.setPadding(0, (4 * dp).toInt(), 0, (4 * dp).toInt())
+        }
+
         viewModel.playerNames.forEach { name ->
             val textView = TextView(this).apply {
-                textSize = 20f
-                setPadding(0, (4 * dp).toInt(), 0, (4 * dp).toInt())
+                textSize = scoreTextSize
+                setPadding(0, scoreTextPad, 0, scoreTextPad)
                 gravity = android.view.Gravity.CENTER
                 setTextColor(Color.WHITE)
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
                 )
             }
 
             val penaltyButton = MaterialButton(this).apply {
                 insetTop = 0
                 insetBottom = 0
+                if (compact) minimumHeight = 0
                 text = getString(R.string.penalty_button, name)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    topMargin = (4 * dp).toInt()
+                    topMargin = penaltyTopMargin
                 }
                 setOnClickListener {
                     val confirmEnabled = getSharedPreferences("ToepenSettings_$profile", Context.MODE_PRIVATE)
@@ -194,6 +208,7 @@ class GameActivity : AppCompatActivity() {
             val foldButton = MaterialButton(outlinedCtx, null, 0).apply {
                 insetTop = 0
                 insetBottom = 0
+                if (compact) minimumHeight = 0
                 text = getString(R.string.fold_button, 0)
                 setTextColor(whiteColors)
                 strokeColor = whiteColors
@@ -206,6 +221,7 @@ class GameActivity : AppCompatActivity() {
             val boerButton = MaterialButton(outlinedCtx, null, 0).apply {
                 insetTop = 0
                 insetBottom = 0
+                if (compact) minimumHeight = 0
                 text = getString(R.string.jack_button)
                 setTextColor(whiteColors)
                 strokeColor = whiteColors
@@ -221,13 +237,12 @@ class GameActivity : AppCompatActivity() {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    topMargin = (8 * dp).toInt()
+                    topMargin = secondRowTop
                 }
                 addView(foldButton)
                 addView(boerButton)
             }
 
-            val cardPadding = (8 * dp).toInt()
             val playerCard = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 setBackgroundResource(R.drawable.player_card_bg)
@@ -237,7 +252,7 @@ class GameActivity : AppCompatActivity() {
                     0,
                     1f
                 ).apply {
-                    bottomMargin = (6 * dp).toInt()
+                    bottomMargin = cardBottomMargin
                 }
                 addView(textView)
                 addView(penaltyButton)
@@ -259,7 +274,6 @@ class GameActivity : AppCompatActivity() {
             val isEliminated = score >= viewModel.maxPenaltyPoints
 
             views.scoreText.text = getString(R.string.player_score, name, convertToTally(score))
-
             if (isEliminated) {
                 views.scoreText.paintFlags = views.scoreText.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                 views.scoreText.alpha = 0.5f
