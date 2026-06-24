@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.example.toepscoretracker.ProfileManager
 import com.example.toepscoretracker.database.AppDatabase
@@ -73,11 +74,18 @@ class SettingsViewModel(
             val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                 ?: throw IOException("Kon geen Downloads-item aanmaken")
             Log.d(TAG, "backupToDownloads: writing $fileName to $uri")
-            resolver.openOutputStream(uri)?.use { out -> dbFile.inputStream().use { it.copyTo(out) } }
-            values.clear()
-            values.put(MediaStore.Downloads.IS_PENDING, 0)
-            resolver.update(uri, values, null, null)
-            Log.d(TAG, "backupToDownloads: MediaStore copy done")
+            try {
+                val out = resolver.openOutputStream(uri)
+                    ?: throw IOException("Kon outputstream niet openen voor $uri")
+                out.use { dbFile.inputStream().use { it.copyTo(out) } }
+                values.clear()
+                values.put(MediaStore.Downloads.IS_PENDING, 0)
+                resolver.update(uri, values, null, null)
+                Log.d(TAG, "backupToDownloads: MediaStore copy done")
+            } catch (e: Exception) {
+                resolver.delete(uri, null, null)
+                throw e
+            }
         } else {
             Log.d(TAG, "backupToDownloads: using legacy Downloads dir")
             @Suppress("DEPRECATION")
@@ -119,11 +127,14 @@ class SettingsViewModel(
         cursor.close()
         rawDb.close()
 
+        val db = AppDatabase.getDatabase(context, profile)
         val repository = repositoryProvider(profile)
-        for (game in games) {
-            val key = game.playerNames.joinToString("|")
-            if (repository.countByTimestampAndPlayers(game.timestamp, key) == 0) {
-                repository.insertGame(game)
+        db.withTransaction {
+            for (game in games) {
+                val key = game.playerNames.joinToString("|")
+                if (repository.countByTimestampAndPlayers(game.timestamp, key) == 0) {
+                    repository.insertGame(game)
+                }
             }
         }
     }
