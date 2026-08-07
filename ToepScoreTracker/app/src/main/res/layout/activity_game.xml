@@ -147,6 +147,14 @@
             android:layout_marginBottom="16dp" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRevanche"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/revanche"
+            android:layout_marginBottom="16dp" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBackToStart"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"

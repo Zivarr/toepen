@@ -301,12 +301,23 @@ class GameActivity : AppCompatActivity() {
         val tvWinner = findViewById<TextView>(R.id.tvWinner)
         val tvDuration = findViewById<TextView>(R.id.tvDuration)
         val btnShare = findViewById<MaterialButton>(R.id.btnShare)
+        val btnRevanche = findViewById<MaterialButton>(R.id.btnRevanche)
 
         val durationText = DurationFormatter.format(durationMillis)
         tvWinner.text = getString(R.string.player_won, winnerName)
         tvDuration.text = getString(R.string.duration_label, durationText)
 
         btnShare.setOnClickListener { shareResults(winnerName, durationText) }
+
+        btnRevanche.setOnClickListener {
+            val intent = Intent(this, PlayerSetupActivity::class.java).apply {
+                putExtra("playerNames", viewModel.playerNames.toTypedArray())
+                putExtra("maxPenaltyPoints", viewModel.maxPenaltyPoints)
+                putExtra("profile", profile)
+            }
+            startActivity(intent)
+            finish()
+        }
 
         llGameLayout.visibility = View.GONE
         llSummaryLayout.visibility = View.VISIBLE

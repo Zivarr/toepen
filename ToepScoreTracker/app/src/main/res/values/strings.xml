@@ -66,4 +66,6 @@
     <string name="rename_dialog_hint">Nieuwe naam</string>
     <string name="rename_profile_empty">Naam mag niet leeg zijn</string>
     <string name="rename_profile_duplicate">Er bestaat al een profiel met deze naam</string>
+    <string name="revanche">Revanche?</string>
+    <string name="add_player">Speler toevoegen</string>
 </resources>
