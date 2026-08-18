@@ -309,6 +309,8 @@ class GameActivity : AppCompatActivity() {
 
         btnShare.setOnClickListener { shareResults(winnerName, durationText) }
 
+        val prefs = getSharedPreferences("ToepenSettings_$profile", Context.MODE_PRIVATE)
+        btnRevanche.visibility = if (prefs.getBoolean("showRematchButton", true)) View.VISIBLE else View.GONE
         btnRevanche.setOnClickListener {
             val intent = Intent(this, PlayerSetupActivity::class.java).apply {
                 putExtra("playerNames", viewModel.playerNames.toTypedArray())

@@ -61,6 +61,7 @@
     <string name="current_profile">Huidig profiel: %s</string>
     <string name="clear_history_current">Wis geschiedenis (huidig profiel)</string>
     <string name="setting_confirm_penalty">Bevestig strafpunt</string>
+    <string name="setting_show_rematch">Toon revanche knop</string>
     <string name="confirm_penalty_message">Strafpunt toevoegen aan %s?</string>
     <string name="rename_profile">Naam wijzigen</string>
     <string name="rename_dialog_hint">Nieuwe naam</string>

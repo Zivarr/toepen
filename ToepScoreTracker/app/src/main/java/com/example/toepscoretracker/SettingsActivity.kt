@@ -85,6 +85,12 @@ class SettingsActivity : AppCompatActivity() {
             prefs.edit().putBoolean("confirmPenalty", checked).apply()
         }
 
+        val switchShowRematch = findViewById<SwitchCompat>(R.id.switchShowRematch)
+        switchShowRematch.isChecked = prefs.getBoolean("showRematchButton", true)
+        switchShowRematch.setOnCheckedChangeListener { _, checked ->
+            prefs.edit().putBoolean("showRematchButton", checked).apply()
+        }
+
         findViewById<Button>(R.id.btnBackup).setOnClickListener { startBackup(profile) }
         findViewById<Button>(R.id.btnRestore).setOnClickListener { startRestore(profile) }
 
