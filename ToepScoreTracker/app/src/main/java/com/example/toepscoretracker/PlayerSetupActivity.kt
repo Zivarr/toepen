@@ -2,13 +2,19 @@ package com.example.toepscoretracker
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Typeface
 import android.os.Bundle
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import com.google.android.material.button.MaterialButton
 
 class PlayerSetupActivity : AppCompatActivity() {
 
@@ -79,6 +85,7 @@ class PlayerSetupActivity : AppCompatActivity() {
     private fun addPlayerRow(name: String = "") {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -92,12 +99,24 @@ class PlayerSetupActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         }
 
-        val btnRemove = Button(this).apply {
+        val removeSize = dpToPx(36)
+        val btnRemove = MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
             text = "×"
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            contentDescription = getString(R.string.remove_player)
+            textSize = 18f
+            setTypeface(typeface, Typeface.BOLD)
+            setTextColor(ContextCompat.getColor(context, R.color.remove_red))
+            strokeColor = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.remove_red))
+            strokeWidth = dpToPx(1)
+            cornerRadius = removeSize / 2
+            insetTop = 0
+            insetBottom = 0
+            minWidth = removeSize
+            minimumWidth = removeSize
+            minHeight = removeSize
+            minimumHeight = removeSize
+            setPadding(0, 0, 0, 0)
+            layoutParams = LinearLayout.LayoutParams(removeSize, removeSize).apply { marginStart = dpToPx(8) }
             setOnClickListener { removePlayerRow(row, et) }
         }
 
@@ -107,6 +126,9 @@ class PlayerSetupActivity : AppCompatActivity() {
         nameInputFields.add(et)
         updateRemoveButtons()
     }
+
+    private fun dpToPx(dp: Int): Int =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics).toInt()
 
     private fun removePlayerRow(row: LinearLayout, et: EditText) {
         llPlayerNames.removeView(row)
