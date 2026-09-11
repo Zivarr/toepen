@@ -69,4 +69,5 @@
     <string name="rename_profile_duplicate">Er bestaat al een profiel met deze naam</string>
     <string name="revanche">Revanche?</string>
     <string name="add_player">Speler toevoegen</string>
+    <string name="remove_player">Verwijder speler</string>
 </resources>
