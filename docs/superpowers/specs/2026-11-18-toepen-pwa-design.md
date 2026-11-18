@@ -69,7 +69,7 @@ The PWA reproduces the current Android behaviour exactly:
 - A player reaching max penalty points is **eliminated** (message shown).
 - The game ends when ≤ 1 player remains; that player wins, or "Niemand" if none remain. The game is saved automatically.
 - **End game early**: saved with no winner.
-- **Remove player** mid-game, **rematch** (Revanche) button, **share** results, **confirm penalty** setting — as in the Android app.
+- Scores are shown as tally marks (`卌` per 5, `|` per remaining point). **Remove player** during player setup, **rematch** (Revanche) button, **share** results, **confirm penalty** setting — as in the Android app.
 - Confetti on game over, elapsed-time display during the game.
 - The game in progress is persisted after every action and survives the app being closed (important on iOS).
 
@@ -198,7 +198,7 @@ Minimal, one Play Store release:
 
 ## 10. Testing
 
-- **Vitest unit tests**: game engine (behaviour identical to the Kotlin logic, including "Niemand", end early, remove player), statistics (incl. time stats and the ended-early rule, player list ordering), name matching, outbox against a fake API (success, duplicate, offline, refused).
+- **Vitest unit tests**: game engine (behaviour identical to the Kotlin logic, including "Niemand", end early), statistics (incl. time stats and the ended-early rule, player list ordering), name matching, outbox against a fake API (success, duplicate, offline, refused).
 - **PHPUnit integration tests** against MySQL 8.4 in Docker: authorisation (member / admin / outsider), idempotent game upload, name resolution incl. merged players, soft delete + restore, approve as new / linked / reject, merge players and groups, install script lock-out.
 - **Playwright end-to-end** in WebKit with iPhone emulation: login, play a game, leaderboard, offline game uploaded later.
 - **Android unit tests**: deterministic UUID, date conversion, payload builder.
