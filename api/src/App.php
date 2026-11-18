@@ -20,6 +20,10 @@ final class App
             ['DELETE', '/games/{id}', [GameHandlers::class, 'delete'], 'user'],
             ['POST', '/sync-requests', [SyncHandlers::class, 'create'], 'user'],
             ['GET', '/sync-requests/mine', [SyncHandlers::class, 'mine'], 'user'],
+            ['GET', '/admin/sync-requests', [SyncHandlers::class, 'adminList'], 'admin'],
+            ['GET', '/admin/sync-requests/{id}/matching', [SyncHandlers::class, 'matching'], 'admin'],
+            ['POST', '/admin/sync-requests/{id}/approve', [SyncHandlers::class, 'approve'], 'admin'],
+            ['POST', '/admin/sync-requests/{id}/reject', [SyncHandlers::class, 'reject'], 'admin'],
         ];
         return array_merge($routes, self::$extraRoutes);
     }

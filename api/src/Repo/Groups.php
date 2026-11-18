@@ -193,7 +193,11 @@ final class Groups
      */
     public static function insertGame(PDO $pdo, int $groupId, int $recordedBy, array $game): bool
     {
-        $pdo->beginTransaction();
+        // Join an outer transaction when there is one (sync approval); only own begin/commit/rollback otherwise.
+        $own = !$pdo->inTransaction();
+        if ($own) {
+            $pdo->beginTransaction();
+        }
         try {
             $ins = $pdo->prepare(
                 'INSERT IGNORE INTO games (id, group_id, recorded_by, started_at, received_at, duration_ms,
@@ -205,7 +209,9 @@ final class Groups
                 $game['max_penalty_points'], $game['ended_early'] ? 1 : 0,
             ]);
             if ($ins->rowCount() === 0) {
-                $pdo->rollBack();
+                if ($own) {
+                    $pdo->rollBack();
+                }
                 return false;
             }
 
@@ -227,10 +233,12 @@ final class Groups
             if (isset($winnerId)) {
                 $pdo->prepare('UPDATE games SET winner_player_id = ? WHERE id = ?')->execute([$winnerId, $game['id']]);
             }
-            $pdo->commit();
+            if ($own) {
+                $pdo->commit();
+            }
             return true;
         } catch (Throwable $e) {
-            if ($pdo->inTransaction()) {
+            if ($own && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw $e;
