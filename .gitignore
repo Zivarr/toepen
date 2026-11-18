@@ -2,3 +2,4 @@
 api/vendor/
 api/config.php
 upload/
+api/.phpunit.result.cache
