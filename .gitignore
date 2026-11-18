@@ -1,1 +1,4 @@
 .claude/
+api/vendor/
+api/config.php
+upload/

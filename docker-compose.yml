@@ -1,0 +1,33 @@
+services:
+  php:
+    build: docker/php
+    ports:
+      - "8080:80"
+    volumes:
+      - ./api:/var/www/html/api
+    environment:
+      DB_HOST: mysql
+      DB_NAME: toepen
+      DB_USER: toepen
+      DB_PASS: toepen
+      TEST_DB_NAME: toepen_test
+    depends_on:
+      mysql:
+        condition: service_healthy
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: toepen
+      MYSQL_USER: toepen
+      MYSQL_PASSWORD: toepen
+    volumes:
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  mysql-data:
