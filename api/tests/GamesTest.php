@@ -184,6 +184,7 @@ final class GamesTest extends TestCase
             'negative score' => [['players' => [$p('Tim', -1), $p('Ravi')], 'winner' => null]],
             'bad uuid' => [['id' => 'not-a-uuid']],
             'bad started_at' => [['started_at' => 'gisteren']],
+            'started_at without offset' => [['started_at' => '2026-11-18T21:04:05']],
             'empty name' => [['players' => [$p('  '), $p('Ravi')], 'winner' => null]],
             'long name' => [['players' => [$p(str_repeat('x', 41)), $p('Ravi')], 'winner' => null]],
             'max zero' => [['max_penalty_points' => 0]],

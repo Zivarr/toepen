@@ -145,11 +145,54 @@ final class SyncApproveTest extends TestCase
         $this->assertTrue(Groups::isMember($this->pdo(), $gid, $tim['id']));
 
         $names = $this->pdo()->query("SELECT name FROM players WHERE group_id = $gid ORDER BY name")->fetchAll(PDO::FETCH_COLUMN);
-        $this->assertSame(['Kees', 'Piet', 'Ravi', 'Tim'], $names);
+        // 'Rav' is the alias row created by the mapping; it is not a live player.
+        $this->assertSame(['Kees', 'Piet', 'Rav', 'Ravi', 'Tim'], $names);
         $game = Groups::gameById($this->pdo(), self::U1);
         $this->assertSame($gid, $game['group_id']);
         $this->assertSame(['Tim', 'Ravi'], array_column($game['players'], 'name'));
         $this->assertSame('Ravi', $game['winner']);
+    }
+
+    public function test_approve_link_creates_alias_so_later_uploads_follow_mapping(): void
+    {
+        [$tim, $admin, $id] = $this->setupRequest();
+        [$gid, $ravi] = $this->existingGroup($tim);
+
+        $r = $this->call('POST', "/admin/sync-requests/$id/approve",
+            ['mode' => 'link', 'group_id' => $gid, 'mapping' => ['Rav' => $ravi, 'Piet' => null]], $admin['token']);
+        $this->assertSame(200, $r->status);
+
+        $live = fn() => array_column($this->call('GET', '/groups', null, $tim['token'])->body['groups'][0]['players'], 'name');
+        $this->assertNotContains('Rav', $live());
+
+        $up = [
+            'id' => '5b4d0e30-7f6c-4a9d-9c32-3e4f5a6b7c8d', 'group_id' => $gid,
+            'started_at' => '2026-12-01T20:00:00+01:00', 'duration_ms' => 600000, 'max_penalty_points' => 10,
+            'ended_early' => false, 'winner' => 'Rav',
+            'players' => [
+                ['name' => 'Tim', 'final_score' => 10, 'boer_count' => 0],
+                ['name' => 'Rav', 'final_score' => 3, 'boer_count' => 0],
+            ],
+        ];
+        $r = $this->call('POST', '/games', $up, $tim['token']);
+        $this->assertSame(201, $r->status);
+        $this->assertSame('Ravi', $r->body['game']['winner']);
+        $this->assertSame(['Tim', 'Ravi'], array_column($r->body['game']['players'], 'name'));
+        $this->assertNotContains('Rav', $live());
+    }
+
+    public function test_matching_treats_merged_away_name_as_exact(): void
+    {
+        [$tim, $admin, $id] = $this->setupRequest([$this->game(self::U1, 'Tim', 'rav')]);
+        [$gid, $ravi] = $this->existingGroup($tim);
+        $rav = Groups::resolvePlayer($this->pdo(), $gid, 'Rav');
+        $ravv = Groups::resolvePlayer($this->pdo(), $gid, 'Ravv');
+        $this->pdo()->exec("UPDATE players SET merged_into_player_id = $ravv WHERE id = $rav");
+        $this->pdo()->exec("UPDATE players SET merged_into_player_id = $ravi WHERE id = $ravv");
+
+        $m = array_column($this->matching($id, $gid, $admin)->body['matches'], null, 'name');
+        $this->assertSame('exact', $m['Rav']['match']);
+        $this->assertSame($ravi, $m['Rav']['player_id']);
     }
 
     public function test_approve_link_skips_games_already_present(): void

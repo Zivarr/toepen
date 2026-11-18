@@ -94,6 +94,24 @@ final class GroupsTest extends TestCase
         $this->assertNull($r2->body);
     }
 
+    public function test_etag_if_none_match_is_lenient(): void
+    {
+        $tim = $this->makeUser('tim');
+        $this->group('A', $tim['id']);
+        $etag = $this->call('GET', '/groups', null, $tim['token'])->headers['ETag'];
+        $bare = substr($etag, 1, -1);
+        $cases = [
+            'W/' . $etag => 304,
+            '"' . $bare . '-gzip"' => 304,
+            '"zzz", W/' . $etag => 304,
+            '"zzz"' => 200,
+        ];
+        foreach ($cases as $header => $status) {
+            $r = $this->call('GET', '/groups', null, $tim['token'], ['If-None-Match' => $header]);
+            $this->assertSame($status, $r->status, $header);
+        }
+    }
+
     public function test_add_player_title_cases_and_returns_201(): void
     {
         $tim = $this->makeUser('tim');

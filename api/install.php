@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 // One-time setup: creates the first admin. Delete this file from the server afterwards.
+ini_set('display_errors', '0');
 require_once __DIR__ . '/src/bootstrap.php';
 
 $config = require __DIR__ . '/config.php';
@@ -11,6 +12,7 @@ $pdo = new PDO(
     $config['db_pass'],
     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
 );
+$pdo->exec("SET time_zone = '+00:00'");
 
 header('Content-Type: text/html; charset=utf-8');
 $message = '';

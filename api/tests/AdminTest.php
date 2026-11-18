@@ -217,6 +217,25 @@ final class AdminTest extends TestCase
         $this->assertSame(404, $this->call('POST', '/admin/groups/merge', ['source_group_id' => 9999, 'target_group_id' => $dst], $a['token'])->status);
     }
 
+    public function test_merge_groups_repoints_alias_of_folded_player_to_target(): void
+    {
+        $a = $this->admin();
+        $tim = $this->makeUser('tim');
+        $src = Groups::create($this->pdo(), 'Bron', $tim['id'], 15);
+        $dst = Groups::create($this->pdo(), 'Doel', $tim['id'], 15);
+        $srcTim = Groups::resolvePlayer($this->pdo(), $src, 'Tim');
+        $dstTim = Groups::resolvePlayer($this->pdo(), $dst, 'Tim');
+        $this->pdo()->prepare('INSERT INTO players (group_id, name, merged_into_player_id) VALUES (?, ?, ?)')
+            ->execute([$src, 'Timmy', $srcTim]);
+
+        $r = $this->call('POST', '/admin/groups/merge', ['source_group_id' => $src, 'target_group_id' => $dst], $a['token']);
+        $this->assertSame(200, $r->status);
+        $this->assertSame($dstTim, Groups::resolvePlayer($this->pdo(), $dst, 'Timmy'));
+        $row = $this->pdo()->query("SELECT group_id, merged_into_player_id FROM players WHERE name = 'Timmy'")->fetch();
+        $this->assertSame($dst, (int)$row['group_id']);
+        $this->assertSame($dstTim, (int)$row['merged_into_player_id']);
+    }
+
     public function test_bin_lists_deleted_and_restore_brings_back(): void
     {
         $a = $this->admin();

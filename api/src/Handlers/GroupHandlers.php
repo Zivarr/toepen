@@ -16,10 +16,29 @@ final class GroupHandlers
         );
         $body = ['groups' => $groups];
         $etag = '"' . sha1((string)json_encode($body)) . '"';
-        if ($req->header('If-None-Match') === $etag) {
+        if (self::etagMatches($req->header('If-None-Match'), $etag)) {
             return new Response(304, null, ['ETag' => $etag]);
         }
         return new Response(200, $body, ['ETag' => $etag]);
+    }
+
+    /** Lenient If-None-Match: comma list, weak prefix W/ and a "-gzip" suffix added by proxies are ignored. */
+    private static function etagMatches(?string $header, string $etag): bool
+    {
+        if ($header === null) {
+            return false;
+        }
+        foreach (explode(',', $header) as $candidate) {
+            $candidate = trim($candidate);
+            if (str_starts_with($candidate, 'W/')) {
+                $candidate = substr($candidate, 2);
+            }
+            $candidate = preg_replace('/-gzip"$/', '"', $candidate);
+            if ($candidate === $etag) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static function patch(Request $req, Ctx $ctx, array $params): Response

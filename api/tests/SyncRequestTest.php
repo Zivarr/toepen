@@ -76,6 +76,21 @@ final class SyncRequestTest extends TestCase
         $this->assertSame(0, $this->countSyncRequests());
     }
 
+    public function test_invalid_game_422_identifies_the_game(): void
+    {
+        $tim = $this->makeUser('tim');
+        $bad = $this->request(['games' => [$this->game(), $this->game(self::UUID2, ['winner' => 'Niemand'])]]);
+        $r = $this->call('POST', '/sync-requests', $bad, $tim['token']);
+        $this->assertSame(422, $r->status);
+        $this->assertSame(1, $r->body['game_index']);
+        $this->assertSame(self::UUID2, $r->body['game_id']);
+
+        $bad = $this->request(['games' => [$this->game('kapot')]]);
+        $r = $this->call('POST', '/sync-requests', $bad, $tim['token']);
+        $this->assertSame(0, $r->body['game_index']);
+        $this->assertSame('kapot', $r->body['game_id']);
+    }
+
     public function test_request_with_zero_games_is_allowed(): void
     {
         $tim = $this->makeUser('tim');

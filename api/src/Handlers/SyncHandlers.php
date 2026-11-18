@@ -35,13 +35,18 @@ final class SyncHandlers
 
         $games = [];
         $seenIds = [];
-        foreach ($rawGames as $g) {
+        foreach ($rawGames as $index => $g) {
+            $gameId = is_array($g) && is_string($g['id'] ?? null) ? $g['id'] : null;
             if (!is_array($g)) {
-                throw new ApiError(422, 'validation_failed', 'Ongeldig spel: geen geldige invoer.');
+                throw new ApiError(422, 'validation_failed', 'Ongeldig spel: geen geldige invoer.', ['game_index' => $index, 'game_id' => null]);
             }
-            $game = Validate::gameUpload($g, requireGroupId: false);
+            try {
+                $game = Validate::gameUpload($g, requireGroupId: false);
+            } catch (ApiError $e) {
+                throw new ApiError(422, 'validation_failed', $e->getMessage(), ['game_index' => $index, 'game_id' => $gameId]);
+            }
             if (isset($seenIds[$game['id']])) {
-                throw new ApiError(422, 'validation_failed', 'Ongeldige invoer: dubbel spel-id in deze upload.');
+                throw new ApiError(422, 'validation_failed', 'Ongeldige invoer: dubbel spel-id in deze upload.', ['game_index' => $index, 'game_id' => $game['id']]);
             }
             $seenIds[$game['id']] = true;
             $games[] = $game;
@@ -141,9 +146,25 @@ final class SyncHandlers
         $st->execute([$groupId]);
         $players = array_map(fn(array $r) => Groups::playerShape($pdo, (int)$r['id']), $st->fetchAll());
 
+        // Merged-away names still resolve to their survivor, so they count as an exact match.
+        $st = $pdo->prepare('SELECT name FROM players WHERE group_id = ? AND merged_into_player_id IS NOT NULL');
+        $st->execute([$groupId]);
+        $aliases = [];
+        foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $aliasName) {
+            $aliases[Names::normalise((string)$aliasName)] = (string)$aliasName;
+        }
+
         $matches = [];
         foreach (self::distinctNames(self::games((string)$payload)) as $name) {
-            $matches[] = ['name' => $name] + Names::findMatch($name, $players);
+            $match = Names::findMatch($name, $players);
+            if ($match['match'] !== 'exact' && isset($aliases[Names::normalise($name)])) {
+                $match = [
+                    'match' => 'exact',
+                    'player_id' => Groups::resolvePlayer($pdo, $groupId, $aliases[Names::normalise($name)]),
+                    'suggestions' => [],
+                ];
+            }
+            $matches[] = ['name' => $name] + $match;
         }
         return new Response(200, ['matches' => $matches]);
     }
@@ -222,6 +243,19 @@ final class SyncHandlers
                         throw new ApiError(422, 'validation_failed', 'Ongeldige mapping: speler hoort niet bij deze groep.');
                     }
                     $mappedNames[$key] = (string)$name;
+                }
+                // Persist the admin's choice as alias rows, so later uploads using the old name land on
+                // the mapped player (resolvePlayer follows merged_into_player_id). If the name already
+                // belongs to a live player the admin has to merge players explicitly; we do nothing.
+                $insertAlias = $pdo->prepare('INSERT INTO players (group_id, name, merged_into_player_id) VALUES (?, ?, ?)');
+                foreach ($mapping as $key => $pid) {
+                    if ($pid === null) {
+                        continue;
+                    }
+                    $aliasName = Names::titleCase((string)$key);
+                    if (Groups::findPlayerByName($pdo, $groupId, $aliasName) === null) {
+                        $insertAlias->execute([$groupId, $aliasName, $pid]);
+                    }
                 }
                 $pdo->prepare('INSERT IGNORE INTO group_members (group_id, user_id, added_by) VALUES (?, ?, ?)')
                     ->execute([$groupId, $requester, $adminId]);

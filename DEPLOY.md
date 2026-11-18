@@ -15,6 +15,13 @@ De map `upload/` bouwen we lokaal met `node scripts/make-upload.mjs`. Die map be
 8. **Eerste beheerder:** open `https://toepen.t-wezeman.nl/api/install.php`, vul gebruikersnaam en wachtwoord (minimaal 8 tekens) in en klik op *Aanmaken*.
 9. **Opruimen:** verwijder `api/install.php` van de server. Die pagina mag niet blijven staan.
 10. **Controle:** open `https://toepen.t-wezeman.nl/api/me` in de browser. Je moet een JSON-antwoord met `"unauthorized"` zien (HTTP 401). Dat betekent dat de API draait.
+11. **Productietest met inloggen:** voer uit (vervang gebruikersnaam en wachtwoord):
+    `curl -s -X POST https://toepen.t-wezeman.nl/api/login -H "Content-Type: application/json" -d '{"username":"admin","password":"...","device_name":"test"}'`
+    Kopieer de `token` uit het antwoord en voer uit:
+    `curl -s https://toepen.t-wezeman.nl/api/me -H "Authorization: Bearer <token>"`
+    Je moet HTTP 200 met de gebruiker terugkrijgen. Krijg je 401 terwijl het token geldig is, dan strip de host de `Authorization`-header. Probeer dan `-H "X-Auth-Token: <token>"`; die header wordt ook geaccepteerd.
+
+Let op: een wachtwoord resetten (PATCH op de gebruiker) logt bestaande apparaten niet uit. Gebruik daarvoor "tokens intrekken" (`POST /admin/users/{id}/revoke-tokens`).
 
 ## Updaten
 
