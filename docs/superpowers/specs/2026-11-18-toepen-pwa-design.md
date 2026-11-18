@@ -94,8 +94,8 @@ Per group, computed from non-deleted games:
 ### Technology
 
 - **Frontend:** Vite + TypeScript + Preact, Dexie (IndexedDB), vite-plugin-pwa (service worker + manifest). Dutch UI text, same wording as the Android app.
-- **Backend:** plain PHP 8 (8.1+ assumed), PDO, MySQL 8.4 (confirmed: 8.4.13). No framework, no Composer on the server.
-- **Local development:** Docker Desktop on the developer's PC with PHP + MySQL 8.4 containers (same major version as production) (`docker-compose.yml`), used for running and testing the API. Nothing Docker-related is deployed.
+- **Backend:** plain PHP 8.4 (confirmed: 8.4.27), PDO, MySQL 8.4 (confirmed: 8.4.13). No framework, no Composer on the server.
+- **Local development:** Docker Desktop on the developer's PC with PHP 8.4 + MySQL 8.4 containers (same major version as production) (`docker-compose.yml`), used for running and testing the API. Nothing Docker-related is deployed.
 
 ### Repo layout
 
@@ -212,6 +212,6 @@ Minimal, one Play Store release:
 - Optional staging subdomain with its own database.
 - Backups: Plesk database backups plus the admin JSON export.
 
-## 12. Open items to confirm before implementation
+## 12. Environment
 
-- PHP version in Plesk (8.1+ assumed). Confirmed so far: MySQL 8.4.13, domain `toepen.t-wezeman.nl`.
+- None. Confirmed: PHP 8.4.27, MySQL 8.4.13, domain `toepen.t-wezeman.nl`.
