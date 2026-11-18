@@ -129,16 +129,28 @@ final class Groups
     /** Non-deleted games of a group, newest first, in the Game shape. */
     public static function gamesFor(PDO $pdo, int $groupId): array
     {
+        return self::loadGames($pdo, 'g.group_id = ? AND g.deleted_at IS NULL', [$groupId]);
+    }
+
+    /** One game in the Game shape, deleted or not; null when the UUID is unknown. */
+    public static function gameById(PDO $pdo, string $id): ?array
+    {
+        return self::loadGames($pdo, 'g.id = ?', [$id])[0] ?? null;
+    }
+
+    /** @param array<int,mixed> $args */
+    private static function loadGames(PDO $pdo, string $where, array $args): array
+    {
         $st = $pdo->prepare(
             'SELECT g.id, g.group_id, g.started_at, g.duration_ms, g.max_penalty_points, g.ended_early,
                     u.username AS recorded_by, w.name AS winner
              FROM games g
              JOIN users u ON u.id = g.recorded_by
              LEFT JOIN players w ON w.id = g.winner_player_id
-             WHERE g.group_id = ? AND g.deleted_at IS NULL
+             WHERE ' . $where . '
              ORDER BY g.started_at DESC, g.received_at DESC, g.id'
         );
-        $st->execute([$groupId]);
+        $st->execute($args);
         $rows = $st->fetchAll();
         if ($rows === []) {
             return [];
@@ -149,10 +161,10 @@ final class Groups
              FROM game_players gp
              JOIN players p ON p.id = gp.player_id
              JOIN games g ON g.id = gp.game_id
-             WHERE g.group_id = ? AND g.deleted_at IS NULL
+             WHERE ' . $where . '
              ORDER BY gp.game_id, gp.seat'
         );
-        $st->execute([$groupId]);
+        $st->execute($args);
         $byGame = [];
         foreach ($st->fetchAll() as $r) {
             $byGame[$r['game_id']][] = [
@@ -173,6 +185,56 @@ final class Groups
             'winner' => $r['winner'],
             'players' => $byGame[$r['id']] ?? [],
         ], $rows);
+    }
+
+    /**
+     * Inserts a validated game (see Validate::gameUpload) with its players, atomically.
+     * Returns false, changing nothing, when the UUID already exists.
+     */
+    public static function insertGame(PDO $pdo, int $groupId, int $recordedBy, array $game): bool
+    {
+        $pdo->beginTransaction();
+        try {
+            $ins = $pdo->prepare(
+                'INSERT IGNORE INTO games (id, group_id, recorded_by, started_at, received_at, duration_ms,
+                                           max_penalty_points, ended_early)
+                 VALUES (?, ?, ?, ?, UTC_TIMESTAMP(), ?, ?, ?)'
+            );
+            $ins->execute([
+                $game['id'], $groupId, $recordedBy, $game['started_at'], $game['duration_ms'],
+                $game['max_penalty_points'], $game['ended_early'] ? 1 : 0,
+            ]);
+            if ($ins->rowCount() === 0) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            $ids = [];
+            $addPlayer = $pdo->prepare(
+                'INSERT INTO game_players (game_id, player_id, seat, final_score, boer_count) VALUES (?, ?, ?, ?, ?)'
+            );
+            foreach ($game['players'] as $seat => $p) {
+                $pid = self::resolvePlayer($pdo, $groupId, $p['name']);
+                if (isset($ids[$pid])) {
+                    throw new ApiError(422, 'validation_failed', 'Ongeldig spel: twee spelers verwijzen naar dezelfde speler.');
+                }
+                $ids[$pid] = true;
+                $addPlayer->execute([$game['id'], $pid, $seat, $p['final_score'], $p['boer_count']]);
+                if ($game['winner'] !== null && Names::normalise($game['winner']) === Names::normalise($p['name'])) {
+                    $winnerId = $pid;
+                }
+            }
+            if (isset($winnerId)) {
+                $pdo->prepare('UPDATE games SET winner_player_id = ? WHERE id = ?')->execute([$winnerId, $game['id']]);
+            }
+            $pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     /** DATETIME (stored in UTC) to ISO 8601 with offset. */

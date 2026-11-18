@@ -47,11 +47,29 @@ final class GroupHandlers
         if ($len < 1 || $len > 40) {
             throw new ApiError(422, 'validation_failed', 'Ongeldige invoer: naam moet 1 tot 40 tekens zijn.');
         }
-        $existing = Groups::findPlayerByName($ctx->pdo, $groupId, $name);
-        if ($existing !== null) {
-            throw new ApiError(409, 'name_taken', 'Deze speler bestaat al.', ['player' => $existing]);
-        }
-        $pid = Groups::resolvePlayer($ctx->pdo, $groupId, $name);
+        $pid = self::createPlayer($ctx->pdo, $groupId, $name);
         return new Response(201, ['player' => Groups::playerShape($ctx->pdo, $pid)]);
+    }
+
+    /**
+     * Creates the player or throws 409 name_taken carrying the live player (end of the merge chain).
+     * A concurrent insert that loses on the unique key is reported the same way.
+     */
+    public static function createPlayer(PDO $pdo, int $groupId, string $name): int
+    {
+        $conflict = fn() => new ApiError(409, 'name_taken', 'Deze speler bestaat al.', [
+            'player' => Groups::playerShape($pdo, Groups::resolvePlayer($pdo, $groupId, $name)),
+        ]);
+        if (Groups::findPlayerByName($pdo, $groupId, $name) !== null) {
+            throw $conflict();
+        }
+        try {
+            return Groups::resolvePlayer($pdo, $groupId, $name);
+        } catch (PDOException $e) {
+            if (($e->errorInfo[1] ?? null) === 1062) {
+                throw $conflict();
+            }
+            throw $e;
+        }
     }
 }

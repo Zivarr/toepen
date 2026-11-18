@@ -16,6 +16,8 @@ final class App
             ['GET', '/groups', [GroupHandlers::class, 'list'], 'user'],
             ['PATCH', '/groups/{id}', [GroupHandlers::class, 'patch'], 'user'],
             ['POST', '/players', [GroupHandlers::class, 'addPlayer'], 'user'],
+            ['POST', '/games', [GameHandlers::class, 'upload'], 'user'],
+            ['DELETE', '/games/{id}', [GameHandlers::class, 'delete'], 'user'],
         ];
         return array_merge($routes, self::$extraRoutes);
     }

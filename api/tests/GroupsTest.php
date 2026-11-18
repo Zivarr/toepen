@@ -115,6 +115,35 @@ final class GroupsTest extends TestCase
         $this->assertSame('Ravi', $r->body['player']['name']);
     }
 
+    public function test_add_player_409_returns_live_player_at_end_of_merge_chain(): void
+    {
+        $tim = $this->makeUser('tim');
+        $g = $this->group('A', $tim['id']);
+        $rav = $this->player($g, 'Rav');
+        $ravi = $this->player($g, 'Ravi');
+        $this->pdo()->prepare('UPDATE players SET merged_into_player_id = ? WHERE id = ?')->execute([$ravi, $rav]);
+        $r = $this->call('POST', '/players', ['group_id' => $g, 'name' => 'rav'], $tim['token']);
+        $this->assertSame(409, $r->status);
+        $this->assertSame($ravi, $r->body['player']['id']);
+        $this->assertSame('Ravi', $r->body['player']['name']);
+    }
+
+    public function test_add_player_concurrent_duplicate_insert_is_409_not_500(): void
+    {
+        $tim = $this->makeUser('tim');
+        $g = $this->group('A', $tim['id']);
+        $existing = $this->player($g, 'Ravi');
+        // Simulates the race: the pre-check saw nothing, the insert then hits the unique key.
+        try {
+            GroupHandlers::createPlayer($this->pdo(), $g, 'Ravi');
+            $this->fail('expected ApiError');
+        } catch (ApiError $e) {
+            $this->assertSame(409, $e->status);
+            $this->assertSame('name_taken', $e->errorCode);
+            $this->assertSame($existing, $e->extra['player']['id']);
+        }
+    }
+
     public function test_add_player_validation(): void
     {
         $tim = $this->makeUser('tim');
