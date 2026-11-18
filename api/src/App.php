@@ -18,6 +18,8 @@ final class App
             ['POST', '/players', [GroupHandlers::class, 'addPlayer'], 'user'],
             ['POST', '/games', [GameHandlers::class, 'upload'], 'user'],
             ['DELETE', '/games/{id}', [GameHandlers::class, 'delete'], 'user'],
+            ['POST', '/sync-requests', [SyncHandlers::class, 'create'], 'user'],
+            ['GET', '/sync-requests/mine', [SyncHandlers::class, 'mine'], 'user'],
         ];
         return array_merge($routes, self::$extraRoutes);
     }
