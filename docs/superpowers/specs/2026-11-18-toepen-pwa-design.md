@@ -20,7 +20,7 @@ Build a Progressive Web App (PWA) version of ToepScoreTracker with a small PHP b
 - Games in a synced group show up on the leaderboard of every member of that group.
 - Existing Android history can be uploaded once and ends up in the right server group with correctly matched player names.
 - The admin controls all accounts and group memberships; there is no self-registration.
-- Everything runs on a netcup web hosting package as plain static files + plain `.php` files + MySQL/MariaDB, uploaded manually by the owner.
+- Everything runs on a netcup web hosting package as plain static files + plain `.php` files + MySQL 8.4, uploaded manually by the owner.
 
 ### Out of scope
 
@@ -89,13 +89,13 @@ Per group, computed from non-deleted games:
 
 ### Hosting
 
-One (sub)domain on netcup with Let's Encrypt HTTPS (required for a PWA). The PWA is served from the root, the API from `/api/`. Same origin, so no CORS for the PWA. The Android app calls the API by absolute URL.
+`https://toepen.t-wezeman.nl` on netcup with Let's Encrypt HTTPS (required for a PWA). The PWA is served from the root, the API from `/api/`. Same origin, so no CORS for the PWA. The Android app calls the API by absolute URL.
 
 ### Technology
 
 - **Frontend:** Vite + TypeScript + Preact, Dexie (IndexedDB), vite-plugin-pwa (service worker + manifest). Dutch UI text, same wording as the Android app.
-- **Backend:** plain PHP 8 (8.1+ assumed), PDO, MySQL 8 / MariaDB 10.4+ compatible SQL. No framework, no Composer on the server.
-- **Local development:** Docker Desktop on the developer's PC with PHP + MariaDB containers (`docker-compose.yml`), used for running and testing the API. Nothing Docker-related is deployed.
+- **Backend:** plain PHP 8 (8.1+ assumed), PDO, MySQL 8.4 (confirmed: 8.4.13). No framework, no Composer on the server.
+- **Local development:** Docker Desktop on the developer's PC with PHP + MySQL 8.4 containers (same major version as production) (`docker-compose.yml`), used for running and testing the API. Nothing Docker-related is deployed.
 
 ### Repo layout
 
@@ -199,7 +199,7 @@ Minimal, one Play Store release:
 ## 10. Testing
 
 - **Vitest unit tests**: game engine (behaviour identical to the Kotlin logic, including "Niemand", end early, remove player), statistics (incl. time stats and the ended-early rule, player list ordering), name matching, outbox against a fake API (success, duplicate, offline, refused).
-- **PHPUnit integration tests** against MariaDB in Docker: authorisation (member / admin / outsider), idempotent game upload, name resolution incl. merged players, soft delete + restore, approve as new / linked / reject, merge players and groups, install script lock-out.
+- **PHPUnit integration tests** against MySQL 8.4 in Docker: authorisation (member / admin / outsider), idempotent game upload, name resolution incl. merged players, soft delete + restore, approve as new / linked / reject, merge players and groups, install script lock-out.
 - **Playwright end-to-end** in WebKit with iPhone emulation: login, play a game, leaderboard, offline game uploaded later.
 - **Android unit tests**: deterministic UUID, date conversion, payload builder.
 - **Manual iPhone checklist**: add to home screen, offline game, close mid-game and resume, update while a game is in progress.
@@ -214,5 +214,4 @@ Minimal, one Play Store release:
 
 ## 12. Open items to confirm before implementation
 
-- Database server and version (`SELECT VERSION();` in phpMyAdmin) and PHP version in Plesk.
-- The (sub)domain the app will live on (needed for the Android upload URL and the PWA manifest).
+- PHP version in Plesk (8.1+ assumed). Confirmed so far: MySQL 8.4.13, domain `toepen.t-wezeman.nl`.
