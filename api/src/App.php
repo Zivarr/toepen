@@ -24,6 +24,19 @@ final class App
             ['GET', '/admin/sync-requests/{id}/matching', [SyncHandlers::class, 'matching'], 'admin'],
             ['POST', '/admin/sync-requests/{id}/approve', [SyncHandlers::class, 'approve'], 'admin'],
             ['POST', '/admin/sync-requests/{id}/reject', [SyncHandlers::class, 'reject'], 'admin'],
+            ['GET', '/admin/users', [AdminHandlers::class, 'listUsers'], 'admin'],
+            ['POST', '/admin/users', [AdminHandlers::class, 'createUser'], 'admin'],
+            ['PATCH', '/admin/users/{id}', [AdminHandlers::class, 'patchUser'], 'admin'],
+            ['POST', '/admin/users/{id}/revoke-tokens', [AdminHandlers::class, 'revokeTokens'], 'admin'],
+            ['GET', '/admin/groups', [AdminHandlers::class, 'listGroups'], 'admin'],
+            ['POST', '/admin/groups/merge', [AdminHandlers::class, 'mergeGroups'], 'admin'],
+            ['POST', '/admin/groups/{id}/members', [AdminHandlers::class, 'addMember'], 'admin'],
+            ['DELETE', '/admin/groups/{id}/members/{user_id}', [AdminHandlers::class, 'removeMember'], 'admin'],
+            ['POST', '/admin/groups/{id}/delete-games', [AdminHandlers::class, 'deleteGames'], 'admin'],
+            ['POST', '/admin/players/merge', [AdminHandlers::class, 'mergePlayers'], 'admin'],
+            ['GET', '/admin/games/deleted', [AdminHandlers::class, 'deletedGames'], 'admin'],
+            ['POST', '/admin/games/{id}/restore', [AdminHandlers::class, 'restoreGame'], 'admin'],
+            ['GET', '/admin/export', [AdminHandlers::class, 'export'], 'admin'],
         ];
         return array_merge($routes, self::$extraRoutes);
     }

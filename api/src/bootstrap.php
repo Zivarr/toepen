@@ -11,4 +11,5 @@ require_once __DIR__ . '/Handlers/AuthHandlers.php';
 require_once __DIR__ . '/Handlers/GroupHandlers.php';
 require_once __DIR__ . '/Handlers/GameHandlers.php';
 require_once __DIR__ . '/Handlers/SyncHandlers.php';
+require_once __DIR__ . '/Handlers/AdminHandlers.php';
 require_once __DIR__ . '/App.php';
