@@ -13,6 +13,9 @@ final class App
             ['POST', '/login', [AuthHandlers::class, 'login'], 'none'],
             ['POST', '/logout', [AuthHandlers::class, 'logout'], 'user'],
             ['GET', '/me', [AuthHandlers::class, 'me'], 'user'],
+            ['GET', '/groups', [GroupHandlers::class, 'list'], 'user'],
+            ['PATCH', '/groups/{id}', [GroupHandlers::class, 'patch'], 'user'],
+            ['POST', '/players', [GroupHandlers::class, 'addPlayer'], 'user'],
         ];
         return array_merge($routes, self::$extraRoutes);
     }
