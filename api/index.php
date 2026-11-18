@@ -39,8 +39,9 @@ $path = preg_replace('#^/api(?=/|$)#', '', $uri);
 $path = $path === '' ? '/' : $path;
 
 $headers = function_exists('getallheaders') ? (getallheaders() ?: []) : [];
-if (!isset($headers['Authorization']) && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
-    $headers['Authorization'] = $_SERVER['HTTP_AUTHORIZATION'];
+$authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+if (!isset($headers['Authorization']) && $authHeader !== '') {
+    $headers['Authorization'] = $authHeader;
 }
 
 $json = null;

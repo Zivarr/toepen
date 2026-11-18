@@ -1,16 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/** Per-request context handed to handlers. Task 2 extends this with the authenticated user. */
-final class Ctx
-{
-    public function __construct(
-        public readonly PDO $pdo,
-        public readonly ?array $user = null,
-    ) {
-    }
-}
-
 final class App
 {
     /** @var array<int,array{0:string,1:string,2:callable,3:string}> test-only extra routes */
@@ -19,7 +9,11 @@ final class App
     /** @return array<int,array{0:string,1:string,2:callable,3:string}> */
     private static function routes(): array
     {
-        $routes = [];
+        $routes = [
+            ['POST', '/login', [AuthHandlers::class, 'login'], 'none'],
+            ['POST', '/logout', [AuthHandlers::class, 'logout'], 'user'],
+            ['GET', '/me', [AuthHandlers::class, 'me'], 'user'],
+        ];
         return array_merge($routes, self::$extraRoutes);
     }
 
@@ -79,14 +73,24 @@ final class App
         return $params;
     }
 
-    /** Placeholder until Task 2 adds token authentication. */
-    private static function authenticate(Request $req, PDO $pdo, string $auth): Ctx
+        private static function authenticate(Request $req, PDO $pdo, string $auth): Ctx
     {
-        if ($auth !== 'none') {
-            throw new ApiError(401, 'unauthorized', 'Je bent niet ingelogd.');
+        if ($auth === 'none') {
+            return new Ctx($pdo);
         }
-        return new Ctx($pdo);
+        $token = Auth::tokenFromRequest($req);
+        $user = $token !== null ? Auth::userForToken($pdo, $token) : null;
+        if ($user === null) {
+            throw new ApiError(401, 'unauthorized', 'Log opnieuw in.');
+        }
+        if ($auth === 'admin' && !$user['is_admin']) {
+            throw new ApiError(403, 'admin_only', 'Alleen voor beheerders.');
+        }
+        $tokenId = $user['token_id'];
+        unset($user['token_id']);
+        return new Ctx($pdo, $user, $tokenId);
     }
+
 
     private static function errorResponse(ApiError $e): Response
     {

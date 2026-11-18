@@ -50,6 +50,15 @@ abstract class TestCase extends BaseTestCase
         return self::$pdo;
     }
 
+    /** @return array{id:int, token:string} */
+    public function makeUser(string $username, bool $admin = false, string $password = 'geheim123'): array
+    {
+        $st = $this->pdo()->prepare('INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)');
+        $st->execute([$username, password_hash($password, PASSWORD_DEFAULT), $admin ? 1 : 0]);
+        $id = (int)$this->pdo()->lastInsertId();
+        return ['id' => $id, 'token' => Auth::issueToken($this->pdo(), $id, 'test')];
+    }
+
     public function call(
         string $method,
         string $path,
