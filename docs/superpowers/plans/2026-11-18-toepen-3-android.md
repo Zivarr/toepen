@@ -68,7 +68,7 @@ A game is **skipped** when: timestamp unparseable; fewer than 2 or more than 8 p
 ```
 
 - [ ] **Step 2:** Run `./gradlew testDebugUnitTest --tests "com.example.toepscoretracker.SyncPayloadTest"` from `ToepScoreTracker/`. Expected: FAIL (unresolved references).
-- [ ] **Step 3:** Implement. Dates use `SimpleDateFormat` (minSdk 24 has no `java.time` without desugaring, and desugaring would be a new dependency): parse with `"dd-MM-yy HH:mm:ss"`, `isLenient = false`, `timeZone = TimeZone.getTimeZone(zone)`; format with `"yyyy-MM-dd'T'HH:mm:ssXXX"` in the same zone. The `zone` parameter is therefore `java.util.TimeZone` (default `TimeZone.getDefault()`), not `ZoneId`.
+- [ ] **Step 3:** Implement. Dates use `SimpleDateFormat` (minSdk 24 has no `java.time` without desugaring, and desugaring would be a new dependency): parse with `"dd-MM-yy HH:mm:ss"`, `isLenient = false`, `timeZone = zone`; format with `"yyyy-MM-dd'T'HH:mm:ssXXX"` in the same zone. The `zone` parameter is therefore `java.util.TimeZone` (default `TimeZone.getDefault()`), not `ZoneId`.
 - [ ] **Step 4:** Run tests. Expected: PASS.
 - [ ] **Step 5:** Commit `feat(android): sync payload builder for server upload`.
 
