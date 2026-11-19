@@ -120,4 +120,44 @@ describe('repo', () => {
     expect(await getGames(g.key)).toHaveLength(0)
     expect(await getGames(other.key)).toHaveLength(1)
   })
+
+  it('saveFinishedGame works when the server group was dropped', async () => {
+    const game = await saveFinishedGame('server:5', finished(), user)
+    expect(game.group_id).toBe(5)
+    const out = await db.outbox.toArray()
+    expect(out).toHaveLength(1)
+    expect(out[0]).toMatchObject({ groupKey: 'server:5', status: 'pending' })
+    expect(out[0].upload.group_id).toBe(5)
+  })
+
+  it('saveFinishedGame works when the local group was deleted', async () => {
+    const game = await saveFinishedGame('local:gone', finished(), user)
+    expect(game.group_id).toBe(0)
+    expect(await db.outbox.count()).toBe(0)
+    expect(await getGames('local:gone')).toHaveLength(1)
+    expect(await getGroup('local:gone')).toBeDefined()
+  })
+
+  it('saving the same game twice stores one game and one outbox item', async () => {
+    await db.groups.add(serverGroup)
+    const a = await saveFinishedGame('server:5', finished(), user, 'game-1')
+    const b = await saveFinishedGame('server:5', finished(), user, 'game-1')
+    expect(b.id).toBe(a.id)
+    expect(await db.games.count()).toBe(1)
+    expect(await db.outbox.count()).toBe(1)
+  })
+
+  it('saveFinishedGame clears the current game atomically', async () => {
+    await db.groups.add(serverGroup)
+    await setCurrentGame({ groupKey: 'server:5', state: finished(), id: 'game-1' })
+    await saveFinishedGame('server:5', finished(), user, 'game-1')
+    expect(await getCurrentGame()).toBeNull()
+    expect((await getGames('server:5'))[0].id).toBe('game-1')
+  })
+
+  it('deleteLocalGroup refuses server groups', async () => {
+    await db.groups.add(serverGroup)
+    await expect(deleteLocalGroup('server:5')).rejects.toThrow()
+    expect(await getGroup('server:5')).toBeDefined()
+  })
 })

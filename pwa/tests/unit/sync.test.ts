@@ -12,11 +12,12 @@ vi.mock('../../src/api/endpoints', () => ({
 import * as api from '../../src/api/endpoints'
 import { ApiError, NetworkError } from '../../src/api/client'
 import { db } from '../../src/storage/db'
-import { createLocalGroup, getGames, getGroup, getGroups, setToken, setUser } from '../../src/storage/repo'
+import { createLocalGroup, getCurrentGame, getGames, getGroup, getGroups, setCurrentGame, setToken, setUser } from '../../src/storage/repo'
 import { flushOutbox, outboxCounts, retryFailed } from '../../src/sync/outbox'
 import { refresh } from '../../src/sync/refresh'
 import { checkSyncRequests, completeApproval, requestSync } from '../../src/sync/requests'
 import { runSyncCycle, startTriggers } from '../../src/sync/triggers'
+import { newGame } from '../../src/game/engine'
 import type { CachedGroup, Game, GameUpload, Group, OutboxItem, StoredGame } from '../../src/types'
 
 const m = vi.mocked(api)
@@ -302,6 +303,18 @@ describe('sync requests', () => {
     expect(m.uploadGame).toHaveBeenCalledTimes(2)
     expect(m.fetchGroups).toHaveBeenCalled()
     expect(await db.outbox.count()).toBe(0)
+  })
+
+  it('approval during a game re-keys the current game', async () => {
+    const l = await localWithGames()
+    await setCurrentGame({ groupKey: l.key, state: newGame(['A', 'B'], 5, 1000), id: 'g-live' })
+    m.uploadGame.mockImplementation(async (g) => ok(g.id, true))
+    m.fetchGroups.mockResolvedValue({ notModified: false, groups: [srvGroup({ id: 9 })], etag: 'e' })
+    await completeApproval(l.key, 9)
+    const cur = await getCurrentGame()
+    expect(cur?.groupKey).toBe('server:9')
+    expect(cur?.id).toBe('g-live')
+    expect(await getGroup('server:9')).toBeDefined()
   })
 
   it('rejected request stores reason and keeps local group', async () => {

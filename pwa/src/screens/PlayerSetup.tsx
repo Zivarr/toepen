@@ -44,7 +44,7 @@ export function PlayerSetup({ groupKey }: { groupKey: string }) {
     )
 
   const maxNum = Number.parseInt(max, 10)
-  const canStart = selected.length >= 2 && selected.length <= MAX_PLAYERS && maxNum >= 1
+  const canStart = selected.length >= 2 && selected.length <= MAX_PLAYERS && maxNum >= 1 && maxNum <= 100
 
   function toggle(p: string) {
     if (selected.includes(p)) setSelected(selected.filter((s) => s !== p))
@@ -121,7 +121,7 @@ export function PlayerSetup({ groupKey }: { groupKey: string }) {
   }
 
   async function begin() {
-    await setCurrentGame({ groupKey: key, state: newGame(selected, maxNum, Date.now()) })
+    await setCurrentGame({ groupKey: key, state: newGame(selected, maxNum, Date.now()), id: crypto.randomUUID() })
     navigate('#/game')
   }
 
@@ -140,6 +140,7 @@ export function PlayerSetup({ groupKey }: { groupKey: string }) {
           type="number"
           inputMode="numeric"
           min="1"
+          max="100"
           value={max}
           onInput={(e) => setMax(e.currentTarget.value)}
         />
@@ -169,6 +170,7 @@ export function PlayerSetup({ groupKey }: { groupKey: string }) {
       <form class="add-row" onSubmit={onAdd}>
         <input
           name="newPlayer"
+          maxLength={40}
           placeholder="Naam"
           autocomplete="off"
           value={name}

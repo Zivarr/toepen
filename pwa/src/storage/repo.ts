@@ -3,7 +3,8 @@ import { toUpload, type GameState } from '../game/engine'
 import { normalise, titleCase } from '../players/match'
 import type { CachedGroup, DeviceSettings, GroupKey, StoredGame, User } from '../types'
 
-type CurrentGame = { groupKey: GroupKey; state: GameState }
+/** `id` is the game's upload id, fixed at game start so re-saving a finished game is idempotent. */
+export type CurrentGame = { groupKey: GroupKey; state: GameState; id?: string }
 
 async function kvGet<T>(key: string): Promise<T | undefined> {
   return (await db.kv.get(key))?.value as T | undefined
@@ -35,6 +36,7 @@ export async function renameLocalGroup(key: GroupKey, name: string): Promise<voi
 }
 
 export async function deleteLocalGroup(key: GroupKey): Promise<void> {
+  if (!key.startsWith('local:')) throw new Error('Only local groups can be deleted')
   await db.transaction('rw', db.groups, db.games, async () => {
     await db.games.where('groupKey').equals(key).delete()
     await db.groups.delete(key)
@@ -46,17 +48,39 @@ export async function getGames(key: GroupKey): Promise<StoredGame[]> {
   return games.sort((a, b) => (a.started_at < b.started_at ? 1 : a.started_at > b.started_at ? -1 : 0))
 }
 
-export async function saveFinishedGame(key: GroupKey, state: GameState, user: User): Promise<StoredGame> {
-  const group = await db.groups.get(key)
-  if (!group) throw new Error(`Unknown group ${key}`)
-  const id = crypto.randomUUID()
-  const upload = toUpload(state, id, group.kind === 'server' ? (group.serverId as number) : 0)
-  const game: StoredGame = { ...upload, group_id: upload.group_id as number, recorded_by: user.username, groupKey: key }
-  await db.transaction('rw', db.games, db.outbox, async () => {
+/**
+ * Stores a finished game (and queues it for upload for server groups) and clears the current game,
+ * all in one transaction. Depends only on the key, not on the group row, so a group that vanished
+ * mid-game cannot lose the result. Saving the same id again returns the stored game.
+ */
+export async function saveFinishedGame(key: GroupKey, state: GameState, user: User, gameId?: string): Promise<StoredGame> {
+  const id = gameId ?? crypto.randomUUID()
+  const serverId = key.startsWith('server:') ? Number(key.slice('server:'.length)) : null
+  return db.transaction('rw', db.games, db.outbox, db.groups, db.kv, async () => {
+    const existing = await db.games.get(id)
+    if (existing) {
+      await db.kv.delete('currentGame')
+      return existing
+    }
+    const upload = toUpload(state, id, serverId ?? 0)
+    const game: StoredGame = { ...upload, group_id: serverId ?? 0, recorded_by: user.username, groupKey: key }
+    if (serverId === null && !(await db.groups.get(key))) {
+      // The local group was deleted mid-game: recreate a stub so the game stays visible.
+      await db.groups.add({
+        key,
+        kind: 'local',
+        name: 'Herstelde groep',
+        creator: user.username,
+        maxPenaltyPoints: state.maxPenaltyPoints,
+        playerNames: [...state.players],
+        pendingPlayers: [],
+      })
+    }
     await db.games.add(game)
-    if (group.kind === 'server') await db.outbox.add({ id, groupKey: key, upload, status: 'pending' })
+    if (serverId !== null) await db.outbox.add({ id, groupKey: key, upload, status: 'pending' })
+    await db.kv.delete('currentGame')
+    return game
   })
-  return game
 }
 
 export async function deleteLocalGame(id: string): Promise<void> {

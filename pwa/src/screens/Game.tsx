@@ -11,7 +11,7 @@ import { toast } from '../components/Toast'
 import { GameSummary } from './GameSummary'
 import { formatDuration } from '../util/format'
 
-type Current = { groupKey: GroupKey; state: GameState }
+type Current = { groupKey: GroupKey; state: GameState; id?: string }
 
 export function Game() {
   const [cur, setCur] = useState<Current | null | undefined>(undefined)
@@ -46,7 +46,11 @@ export function Game() {
         showRematch={settings.showRematch}
         onRematch={() => {
           const s = finished.state
-          const next = { groupKey: finished.groupKey, state: newGame(s.players, s.maxPenaltyPoints, Date.now()) }
+          const next = {
+            groupKey: finished.groupKey,
+            state: newGame(s.players, s.maxPenaltyPoints, Date.now()),
+            id: crypto.randomUUID(),
+          }
           void setCurrentGame(next).then(() => {
             latest.current = next
             setFinished(null)
@@ -67,26 +71,31 @@ export function Game() {
   }
 
   async function run(action: Action) {
-    const base = latest.current
-    if (!base) return
+    const held = latest.current
+    if (!held) return
+    // The stored key can change mid-game (a local group approved by the admin gets re-keyed).
+    const stored = await getCurrentGame()
+    const base: Current = stored && stored.groupKey !== held.groupKey ? { ...held, groupKey: stored.groupKey } : held
     const r = apply(base.state, action, Date.now())
     for (const e of r.events) {
-      if (e.type === 'eliminated') toast(`${e.name} ligt eruit!`)
-      else if (e.type === 'undoEmpty') toast('Niets om ongedaan te maken')
+      if (e.type === 'eliminated') toast(`${e.name} heeft verloren!`)
+      else if (e.type === 'undoEmpty') toast('Niks om ongedaan te maken')
     }
-    if (r.state === base.state) return
+    if (r.state === base.state) {
+      latest.current = base
+      return
+    }
     if (r.state.isOver) {
       // latest stays untouched until the save succeeded, so a failed save can be retried by tapping again.
       const user = await getUser()
       if (!user) throw new Error('Niet ingelogd')
-      await saveFinishedGame(base.groupKey, r.state, user)
+      await saveFinishedGame(base.groupKey, r.state, user, base.id) // also clears the current game
       latest.current = null
-      await setCurrentGame(null).catch((e) => console.warn('Huidig spel wissen mislukt', e))
       void runSyncCycle()
       setFinished({ groupKey: base.groupKey, state: r.state })
       return
     }
-    const next = { groupKey: base.groupKey, state: r.state }
+    const next = { groupKey: base.groupKey, state: r.state, id: base.id }
     latest.current = next
     setCur(next)
     await setCurrentGame(next)
@@ -141,7 +150,7 @@ export function Game() {
           Ongedaan maken
         </Button>
         <Button variant="danger" onClick={() => setConfirmEnd(true)}>
-          Spel beëindigen
+          Eindig spel
         </Button>
       </div>
       {confirmPlayer && (
@@ -159,7 +168,7 @@ export function Game() {
       )}
       {confirmEnd && (
         <ConfirmDialog
-          title="Spel beëindigen"
+          title="Eindig spel"
           message="Weet je zeker dat je het spel wilt beëindigen?"
           confirmLabel="Beëindigen"
           danger

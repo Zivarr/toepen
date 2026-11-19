@@ -18,7 +18,7 @@ export async function requestSync(key: GroupKey): Promise<void> {
 /** Moves a local group's games to the server group and queues them for upload. */
 export async function completeApproval(localKey: GroupKey, serverId: number): Promise<void> {
   const serverKey: GroupKey = `server:${serverId}`
-  await db.transaction('rw', db.groups, db.games, db.outbox, async () => {
+  await db.transaction('rw', db.groups, db.games, db.outbox, db.kv, async () => {
     const games = await db.games.where('groupKey').equals(localKey).toArray()
     for (const g of games) {
       const { recorded_by: _r, groupKey: _k, ...rest } = g
@@ -26,7 +26,23 @@ export async function completeApproval(localKey: GroupKey, serverId: number): Pr
       await db.games.put({ ...g, group_id: serverId, groupKey: serverKey })
       await db.outbox.put({ id: g.id, groupKey: serverKey, upload, status: 'pending' })
     }
+    const local = await db.groups.get(localKey)
     await db.groups.delete(localKey)
+    // Keep a game in progress saveable: re-key it, and keep the group visible until the next refresh.
+    const cur = (await db.kv.get('currentGame'))?.value as { groupKey: GroupKey } | undefined
+    if (cur && cur.groupKey === localKey) await db.kv.put({ key: 'currentGame', value: { ...cur, groupKey: serverKey } })
+    if (local && !(await db.groups.get(serverKey))) {
+      await db.groups.put({
+        key: serverKey,
+        kind: 'server',
+        serverId,
+        name: local.name,
+        creator: local.creator,
+        maxPenaltyPoints: local.maxPenaltyPoints,
+        playerNames: local.playerNames,
+        pendingPlayers: [],
+      })
+    }
   })
   await flushOutbox()
   await refresh()
