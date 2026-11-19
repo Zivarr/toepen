@@ -5,8 +5,17 @@ declare(strict_types=1);
 // Usage: docker compose exec -T php php api/tests/seed_e2e.php
 
 $config = require __DIR__ . '/../config.php';
-if ($config['db_name'] === 'toepen_test') {
-    fwrite(STDERR, "Refusing to seed the PHPUnit test database\n");
+$allowedHosts = ['mysql', 'localhost', '127.0.0.1'];
+$testDb = getenv('TEST_DB_NAME');
+if (
+    $config['db_name'] !== 'toepen'
+    || !in_array($config['db_host'], $allowedHosts, true)
+    || $config['db_name'] === 'toepen_test'
+    || ($testDb !== false && $testDb !== '' && $config['db_name'] === $testDb)
+) {
+    fwrite(STDERR, "Refusing to seed: only the local dev database 'toepen' on host mysql/localhost/127.0.0.1 may be reset (got "
+        . $config['db_name'] . '@' . $config['db_host'] . ")
+");
     exit(1);
 }
 
