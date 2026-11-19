@@ -36,7 +36,7 @@ export function GroupHome({ groupKey }: { groupKey: string }) {
     e.preventDefault()
     const g = group as CachedGroup
     const m = Number.parseInt(max, 10)
-    if (!(m >= 1)) return
+    if (!(m >= 1 && m <= 100)) return
     try {
       if (g.kind === 'server') {
         await patchGroup(g.serverId!, m)
@@ -69,7 +69,7 @@ export function GroupHome({ groupKey }: { groupKey: string }) {
           Resultaten
         </a>
         <a class="btn btn-secondary" href={`#/g/${key}/stats`}>
-          Klassement
+          Ranglijst
         </a>
       </div>
       <form class="card" onSubmit={save}>
@@ -80,6 +80,7 @@ export function GroupHome({ groupKey }: { groupKey: string }) {
             type="number"
             inputMode="numeric"
             min="1"
+            max="100"
             value={max}
             onInput={(e) => setMax(e.currentTarget.value)}
           />

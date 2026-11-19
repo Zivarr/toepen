@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks'
 import { createLocalGroup, deleteLocalGroup, getGroups, renameLocalGroup } from '../storage/repo'
 import { requestSync } from '../sync/requests'
-import { NetworkError } from '../api/client'
+import { ApiError, NetworkError } from '../api/client'
 import type { CachedGroup } from '../types'
 import { Button } from '../components/Button'
 import { Dialog } from '../components/Dialog'
@@ -49,7 +49,7 @@ export function Groups() {
     e.preventDefault()
     const n = name.trim()
     const m = Number.parseInt(max, 10)
-    if (!n || !(m >= 1)) return
+    if (!n || !(m >= 1 && m <= 100)) return
     await createLocalGroup(n, m)
     setModal(null)
     load()
@@ -78,7 +78,13 @@ export function Groups() {
     try {
       await requestSync(key)
     } catch (e) {
-      toast(e instanceof NetworkError ? 'Geen verbinding met de server' : 'Synchronisatie aanvragen is mislukt')
+      toast(
+        e instanceof NetworkError
+          ? 'Geen verbinding met de server'
+          : e instanceof ApiError && e.message
+            ? e.message
+            : 'Synchronisatie aanvragen is mislukt',
+      )
     }
     load()
   }
@@ -126,7 +132,7 @@ export function Groups() {
           <form onSubmit={submitNew}>
             <label>
               Naam
-              <input name="name" value={name} onInput={(e) => setName(e.currentTarget.value)} required />
+              <input name="name" maxLength={40} value={name} onInput={(e) => setName(e.currentTarget.value)} required />
             </label>
             <label>
               Max strafpunten
@@ -135,6 +141,7 @@ export function Groups() {
                 type="number"
                 inputMode="numeric"
                 min="1"
+                max="100"
                 value={max}
                 onInput={(e) => setMax(e.currentTarget.value)}
                 required
@@ -154,7 +161,7 @@ export function Groups() {
           <form onSubmit={submitRename}>
             <label>
               Naam
-              <input name="name" value={name} onInput={(e) => setName(e.currentTarget.value)} required />
+              <input name="name" maxLength={40} value={name} onInput={(e) => setName(e.currentTarget.value)} required />
             </label>
             <div class="dialog-actions">
               <Button variant="ghost" onClick={() => setModal(null)}>
