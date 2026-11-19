@@ -12,18 +12,25 @@ class HttpUploadApi(private val baseUrl: String = BuildConfig.API_BASE_URL) : Up
             .put("username", username)
             .put("password", password)
             .put("device_name", deviceName)
-        val json = JSONObject(call("/login", null, body))
-        return json.getString("token")
+        val text = call("/login", null, body)
+        return parse { JSONObject(text).getString("token") }
     }
 
     override fun createSyncRequest(token: String, payload: JSONObject): Int {
-        val json = JSONObject(call("/sync-requests", token, payload))
-        return json.getJSONObject("request").getInt("id")
+        val text = call("/sync-requests", token, payload)
+        return parse { JSONObject(text).getJSONObject("request").getInt("id") }
     }
 
     override fun logout(token: String) {
         call("/logout", token, null)
     }
+
+    private fun <T> parse(block: () -> T): T =
+        try {
+            block()
+        } catch (e: org.json.JSONException) {
+            throw UnexpectedResponseException(e)
+        }
 
     private fun call(path: String, token: String?, body: JSONObject?): String {
         val conn = URL(baseUrl + path).openConnection() as HttpURLConnection

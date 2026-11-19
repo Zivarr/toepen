@@ -88,4 +88,19 @@ class ServerUploaderTest {
             ServerUploader(api).upload("Work", listOf(good), "u", "p")
         )
     }
+
+    @Test fun `unexpected runtime exception maps to Failed and still logs out`() {
+        val api = FakeApi().apply { createError = IllegalStateException("bad json") }
+        val r = ServerUploader(api).upload("Work", listOf(good), "u", "p")
+        assertTrue(r is UploadResult.Failed)
+        assertEquals(listOf("login", "create:tok", "logout:tok"), api.calls)
+    }
+
+    @Test fun `unreadable response maps to Failed with its Dutch message`() {
+        val api = FakeApi().apply { createError = com.example.toepscoretracker.upload.UnexpectedResponseException() }
+        assertEquals(
+            UploadResult.Failed("Onverwacht antwoord van de server"),
+            ServerUploader(api).upload("Work", listOf(good), "u", "p")
+        )
+    }
 }

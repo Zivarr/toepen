@@ -36,8 +36,12 @@ class ServerUploader(private val api: UploadApi) {
                 e.status == 401 && e.code == "invalid_credentials" -> UploadResult.WrongCredentials
                 else -> UploadResult.Failed(e.message?.takeIf { it.isNotBlank() } ?: GENERIC_ERROR)
             }
+        } catch (e: UnexpectedResponseException) {
+            UploadResult.Failed(e.message ?: GENERIC_ERROR)
         } catch (e: IOException) {
             UploadResult.Failed(NO_CONNECTION)
+        } catch (e: RuntimeException) {
+            UploadResult.Failed(GENERIC_ERROR)
         }
     }
 
