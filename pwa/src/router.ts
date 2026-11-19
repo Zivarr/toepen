@@ -9,7 +9,12 @@ const GROUPS: Route = { name: 'groups', params: {} }
 
 export function parseRoute(hash: string): Route {
   const path = hash.replace(/^#/, '').split('?')[0].replace(/\/+$/, '')
-  const parts = path.split('/').filter(Boolean).map(decodeURIComponent)
+  let parts: string[]
+  try {
+    parts = path.split('/').filter(Boolean).map(decodeURIComponent)
+  } catch {
+    return GROUPS
+  }
   const [a, b, c] = parts
   const n = parts.length
   if (n === 0) return GROUPS

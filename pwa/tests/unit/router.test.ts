@@ -27,4 +27,8 @@ describe('parseRoute', () => {
     expect(parseRoute('#/admin/requests').name).toBe('adminRequests')
     expect(parseRoute('#/admin/bin').name).toBe('adminBin')
   })
+
+  it('falls back to groups on a malformed percent-encoding', () => {
+    expect(parseRoute('#/g/%E0%A4%A')).toEqual({ name: 'groups', params: {} })
+  })
 })

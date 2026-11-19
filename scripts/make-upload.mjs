@@ -2,6 +2,7 @@
 // Usage: node scripts/make-upload.mjs
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -39,6 +40,18 @@ export function copyApi(targetDir) {
 function build() {
     const uploadDir = path.join(repoRoot, 'upload');
     fs.rmSync(uploadDir, { recursive: true, force: true });
+
+    const result = spawnSync('npm --prefix pwa run build', {
+        cwd: repoRoot,
+        stdio: 'inherit',
+        shell: true,
+    });
+    if (result.status !== 0) {
+        console.error('PWA-build mislukt (npm --prefix pwa run build); upload/ is niet gemaakt.');
+        process.exit(1);
+    }
+
+    fs.cpSync(path.join(repoRoot, 'pwa', 'dist'), uploadDir, { recursive: true });
     copyApi(path.join(uploadDir, 'api'));
     console.log(`Built ${path.relative(process.cwd(), uploadDir) || uploadDir}`);
 }

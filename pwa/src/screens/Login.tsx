@@ -29,6 +29,7 @@ export function Login() {
       const r = await login(username.trim(), password)
       await setToken(r.token)
       await setUser(r.user)
+      void navigator.storage?.persist?.()?.catch(() => {})
       startTriggers()
       void runSyncCycle()
       navigate('#/')

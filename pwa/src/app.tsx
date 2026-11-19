@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
+import { useRegisterSW } from 'virtual:pwa-register/preact'
 import { navigate, useRoute } from './router'
 import { clearAuth, getCurrentGame, getToken, getUser } from './storage/repo'
 import { setUnauthorizedHandler } from './api/client'
@@ -43,6 +44,10 @@ export function badgeText(n: number): string {
 
 export function App() {
   const route = useRoute()
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW()
   const [authed, setAuthed] = useState<boolean | null>(null)
   const [user, setUserState] = useState<User | null>(null)
   const [pending, setPending] = useState(0)
@@ -116,6 +121,11 @@ export function App() {
           Instellingen
         </a>
       </header>
+      {needRefresh && route.name !== 'game' && (
+        <button type="button" class="update-banner" onClick={() => void updateServiceWorker(true)}>
+          Nieuwe versie beschikbaar – vernieuwen
+        </button>
+      )}
       {hasGame && route.name !== 'game' && (
         <a class="resume-banner" href="#/game">
           Ga verder met spel

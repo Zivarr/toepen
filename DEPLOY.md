@@ -9,8 +9,8 @@ De map `upload/` bouwen we lokaal met `node scripts/make-upload.mjs`. Die map be
 2. **PHP-versie:** kies bij *PHP-instellingen* van het domein PHP **8.4**.
 3. **Database:** maak in Plesk (*Databases*) een MySQL-database `toepen` met een gebruiker en wachtwoord. Noteer die gegevens.
 4. **Schema:** open phpMyAdmin, selecteer de database `toepen` en voer `api/migrations/001_init.sql` uit (tabblad *SQL*, bestand kiezen, *Uitvoeren*).
-5. **Bouwen:** voer lokaal `node scripts/make-upload.mjs` uit in de projectmap. Er ontstaat een map `upload/` met een submap `api/`.
-6. **Uploaden:** upload de inhoud van `upload/` (dus de map `api/`) naar de document root van het subdomein, via Plesk *Bestanden* of FTP. Na de upload staan de bestanden op `…/api/index.php`, `…/api/src/`, enzovoort.
+5. **Bouwen:** voer lokaal `node scripts/make-upload.mjs` uit in de projectmap. Er ontstaat een map `upload/` met de PWA-bestanden (`index.html`, `sw.js`, `assets/`, enzovoort) en een submap `api/`.
+6. **Uploaden:** upload de inhoud van `upload/` (dus de PWA-bestanden én de map `api/`) naar de document root van het subdomein, via Plesk *Bestanden* of FTP. Na de upload staan de bestanden op `…/api/index.php`, `…/api/src/`, enzovoort.
 7. **Configuratie:** kopieer `api/config.example.php` op de server naar `api/config.php` en vul de databasegegevens uit stap 3 in. Dit bestand staat nooit in `upload/`, dus een nieuwe upload overschrijft het niet.
 8. **Eerste beheerder:** open `https://toepen.t-wezeman.nl/api/install.php`, vul gebruikersnaam en wachtwoord (minimaal 8 tekens) in en klik op *Aanmaken*.
 9. **Opruimen:** verwijder `api/install.php` van de server. Die pagina mag niet blijven staan.
@@ -23,10 +23,19 @@ De map `upload/` bouwen we lokaal met `node scripts/make-upload.mjs`. Die map be
 
 Let op: een wachtwoord resetten (PATCH op de gebruiker) logt bestaande apparaten niet uit. Gebruik daarvoor "tokens intrekken" (`POST /admin/users/{id}/revoke-tokens`).
 
+## PWA-bestanden
+
+- Upload alles in `upload/` naar de document root van het subdomein. `api/config.php` zit er niet in en blijft op de server staan.
+- `sw.js` en `index.html` moeten bij elke release overschreven worden, anders krijgen gebruikers de nieuwe versie niet.
+- De overige bestanden (de gehashte bestanden in `assets/`) mogen zich ophopen; oude bestanden mag je verwijderen.
+- Installeren op iPhone: open de site in Safari, tik op *Deel* en kies *Zet op beginscherm*.
+- Installeren op Android (Chrome): open het menu en kies *App installeren* (of *Toevoegen aan startscherm*).
+- Een nieuwe versie verschijnt als de melding "Nieuwe versie beschikbaar – vernieuwen" in de app; de gebruiker tikt erop om bij te werken. Tijdens een spel wordt de melding niet getoond.
+
 ## Updaten
 
 1. Bouw opnieuw met `node scripts/make-upload.mjs`.
-2. Upload de gewijzigde bestanden uit `upload/api/` naar de server. Overschrijf `config.php` niet; die staat er al.
+2. Upload de gewijzigde bestanden uit `upload/` (PWA) en `upload/api/` (API) naar de server; overschrijf `sw.js` en `index.html` altijd. Overschrijf `config.php` niet; die staat er al.
 3. Voer nieuwe `api/migrations/NNN_*.sql`-bestanden in phpMyAdmin uit, op volgorde van nummer, en alleen de bestanden die je nog niet eerder hebt uitgevoerd.
 
 ## Lokaal ontwikkelen
