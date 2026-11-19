@@ -19,6 +19,17 @@ const games = [
   game(null, [['Ravi', 5, 0], ['Kees', 5, 0]], 1 * MIN, true),
 ]
 
+describe('leaderboard name key', () => {
+  it('counts names differing by internal double space as one player', () => {
+    const lb = leaderboard([
+      game('Jan Piet', [['Jan Piet', 1, 0], ['Kees', 2, 0]], MIN),
+      game('Jan  Piet', [['Jan  Piet', 1, 0], ['Kees', 2, 0]], MIN),
+    ])
+    expect(lb.filter((p) => p.name.startsWith('Jan'))).toHaveLength(1)
+    expect(lb.find((p) => p.name.startsWith('Jan'))).toMatchObject({ wins: 2, played: 2 })
+  })
+})
+
 describe('leaderboard', () => {
   const lb = leaderboard(games)
   it('counts wins, played, boer, winRate (case-insensitive names)', () => {

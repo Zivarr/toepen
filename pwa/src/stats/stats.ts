@@ -1,4 +1,5 @@
 import type { Game } from '../types'
+import { normalise } from '../players/match'
 
 export interface PlayerStats {
   name: string
@@ -18,7 +19,7 @@ export interface TimeStats {
   totalMs: number
 }
 
-const key = (name: string) => name.trim().toLowerCase()
+const key = normalise
 const byName = (a: string, b: string) => a.localeCompare(b, 'nl')
 
 export function leaderboard(games: Game[]): PlayerStats[] {

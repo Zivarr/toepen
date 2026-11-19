@@ -3,13 +3,7 @@ import confetti from 'canvas-confetti'
 import type { GameState } from '../game/engine'
 import { Button } from '../components/Button'
 import { toast } from '../components/Toast'
-
-/** HH:MM:SS, same as the Android DurationFormatter. */
-export function formatDuration(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000))
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${p(Math.floor(total / 3600))}:${p(Math.floor(total / 60) % 60)}:${p(total % 60)}`
-}
+import { formatDuration } from '../util/format'
 
 export function shareText(state: GameState): string {
   const lines = [

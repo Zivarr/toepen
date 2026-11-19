@@ -8,7 +8,8 @@ import type { DeviceSettings, GroupKey } from '../types'
 import { Button } from '../components/Button'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { toast } from '../components/Toast'
-import { GameSummary, formatDuration } from './GameSummary'
+import { GameSummary } from './GameSummary'
+import { formatDuration } from '../util/format'
 
 type Current = { groupKey: GroupKey; state: GameState }
 

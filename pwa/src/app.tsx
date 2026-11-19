@@ -10,6 +10,9 @@ import { Groups } from './screens/Groups'
 import { GroupHome } from './screens/GroupHome'
 import { PlayerSetup } from './screens/PlayerSetup'
 import { Game } from './screens/Game'
+import { Results } from './screens/Results'
+import { Leaderboard } from './screens/Leaderboard'
+import { Settings } from './screens/Settings'
 import { ToastHost } from './components/Toast'
 
 const TITLES: Record<string, string> = {
@@ -76,6 +79,9 @@ export function App() {
   else if (route.name === 'group') screen = <GroupHome groupKey={route.params.key} />
   else if (route.name === 'setup') screen = <PlayerSetup groupKey={route.params.key} />
   else if (route.name === 'game') screen = <Game />
+  else if (route.name === 'results') screen = <Results groupKey={route.params.key} />
+  else if (route.name === 'leaderboard') screen = <Leaderboard groupKey={route.params.key} />
+  else if (route.name === 'settings') screen = <Settings />
   else
     screen = (
       <main class="screen" data-route={route.name}>
