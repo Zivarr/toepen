@@ -7,7 +7,9 @@ export function deviceName(ua: string = navigator.userAgent): string {
   return 'Browser'
 }
 
-export type AdminUser = User & { disabled: boolean; last_used_at: string | null }
+export type AdminUser = User & { disabled: boolean; last_used_at: string | null; invite_pending: boolean }
+export interface LinkInfo { username: string; purpose: 'invite' | 'reset'; expires_at: string }
+export interface PasswordLink { code: string; purpose: 'invite' | 'reset'; expires_at: string }
 export type AdminGroup = { id: number; name: string; creator: string; members: User[]; game_count: number }
 export type AdminSyncRequest = SyncRequest & { requested_by: string; game_count: number; player_names: string[] }
 export type MatchEntry = {
@@ -25,6 +27,22 @@ export async function login(username: string, password: string, device: string =
 
 export async function logout(): Promise<void> {
   await request('POST', '/logout')
+}
+
+export async function linkInfo(code: string): Promise<LinkInfo> {
+  return (await request<LinkInfo>('GET', `/password-links/${encodeURIComponent(code)}`)).data!
+}
+
+export async function redeemLink(code: string, password: string): Promise<{ token: string; user: User }> {
+  const r = await request<{ token: string; user: User }>('POST', `/password-links/${encodeURIComponent(code)}`, {
+    password,
+    device_name: deviceName(),
+  })
+  return r.data!
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await request('POST', '/me/password', { current_password: currentPassword, new_password: newPassword })
 }
 
 export async function me(): Promise<User> {
@@ -77,9 +95,18 @@ export const admin = {
   async listUsers(): Promise<AdminUser[]> {
     return (await request<{ users: AdminUser[] }>('GET', '/admin/users')).data!.users
   },
-  async createUser(username: string, password: string, isAdmin: boolean): Promise<User> {
-    const r = await request<{ user: User }>('POST', '/admin/users', { username, password, is_admin: isAdmin })
-    return r.data!.user
+  /** Without a password (null or '') the server creates an invite link. */
+  async createUser(
+    username: string,
+    password: string | null,
+    isAdmin: boolean,
+  ): Promise<{ user: AdminUser; link?: PasswordLink }> {
+    const body: Record<string, unknown> = { username, is_admin: isAdmin }
+    if (password) body.password = password
+    return (await request<{ user: AdminUser; link?: PasswordLink }>('POST', '/admin/users', body)).data!
+  },
+  async passwordLink(userId: number): Promise<PasswordLink> {
+    return (await request<{ link: PasswordLink }>('POST', `/admin/users/${userId}/password-link`)).data!.link
   },
   async updateUser(id: number, patch: { password?: string; disabled?: boolean; is_admin?: boolean }): Promise<User> {
     return (await request<{ user: User }>('PATCH', `/admin/users/${id}`, patch)).data!.user

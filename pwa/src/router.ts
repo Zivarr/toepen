@@ -7,6 +7,9 @@ export interface Route {
 
 const GROUPS: Route = { name: 'groups', params: {} }
 
+/** Routes that work without being logged in. */
+export const PUBLIC_ROUTES = ['login', 'welkom']
+
 export function parseRoute(hash: string): Route {
   const path = hash.replace(/^#/, '').split('?')[0].replace(/\/+$/, '')
   let parts: string[]
@@ -23,6 +26,7 @@ export function parseRoute(hash: string): Route {
     if (a === 'game') return { name: 'game', params: {} }
     if (a === 'settings') return { name: 'settings', params: {} }
   }
+  if (n === 2 && a === 'welkom' && b) return { name: 'welkom', params: { code: b } }
   if (a === 'g' && b) {
     if (n === 2) return { name: 'group', params: { key: b } }
     if (n === 3 && c === 'setup') return { name: 'setup', params: { key: b } }

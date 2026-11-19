@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { useRegisterSW } from 'virtual:pwa-register/preact'
-import { navigate, useRoute } from './router'
+import { navigate, PUBLIC_ROUTES, useRoute } from './router'
 import { clearAuth, getCurrentGame, getToken, getUser } from './storage/repo'
 import { setUnauthorizedHandler } from './api/client'
 import { outboxCounts } from './sync/outbox'
 import { startTriggers } from './sync/triggers'
 import type { User } from './types'
 import { Login } from './screens/Login'
+import { Welcome } from './screens/Welcome'
 import { Groups } from './screens/Groups'
 import { GroupHome } from './screens/GroupHome'
 import { PlayerSetup } from './screens/PlayerSetup'
@@ -71,7 +72,7 @@ export function App() {
     void Promise.all([getToken(), getUser()]).then(([t, u]) => {
       setAuthed(!!t)
       setUserState(u)
-      if (!t && route.name !== 'login') navigate('#/login')
+      if (!t && !PUBLIC_ROUTES.includes(route.name)) navigate('#/login')
       else if (t) startTriggers()
     })
   }, [route.name])
@@ -87,10 +88,10 @@ export function App() {
   }, [route.name, route.params.key])
 
   if (authed === null) return null
-  if (route.name === 'login') {
+  if (route.name === 'login' || route.name === 'welkom') {
     return (
       <>
-        <Login />
+        {route.name === 'login' ? <Login /> : <Welcome code={route.params.code} />}
         <ToastHost />
       </>
     )

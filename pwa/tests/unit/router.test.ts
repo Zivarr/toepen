@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseRoute } from '../../src/router'
+import { parseRoute, PUBLIC_ROUTES } from '../../src/router'
 
 describe('parseRoute', () => {
   it('parses setup with a server key', () => {
@@ -30,5 +30,15 @@ describe('parseRoute', () => {
 
   it('falls back to groups on a malformed percent-encoding', () => {
     expect(parseRoute('#/g/%E0%A4%A')).toEqual({ name: 'groups', params: {} })
+  })
+})
+
+describe('welcome route', () => {
+  it('parses #/welkom/:code', () => {
+    expect(parseRoute('#/welkom/abc123')).toEqual({ name: 'welkom', params: { code: 'abc123' } })
+  })
+  it('is public', () => {
+    expect(PUBLIC_ROUTES).toContain('welkom')
+    expect(PUBLIC_ROUTES).toContain('login')
   })
 })

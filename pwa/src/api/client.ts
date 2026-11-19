@@ -73,7 +73,9 @@ export async function request<T>(
   }
 
   if (!res.ok) {
-    if (res.status === 401 && !(method === 'POST' && path === '/login')) onUnauthorized()
+    // Public calls (login, password links) never trigger the global logout.
+    const isPublic = (method === 'POST' && path === '/login') || path.startsWith('/password-links/')
+    if (res.status === 401 && !isPublic) onUnauthorized()
     const b = (isJson && parsed && typeof parsed === 'object' ? parsed : {}) as { error?: string; message?: string }
     const code = typeof b.error === 'string' ? b.error : `http_${res.status}`
     throw new ApiError(res.status, code, b.message ?? res.statusText, isJson ? parsed : undefined)
