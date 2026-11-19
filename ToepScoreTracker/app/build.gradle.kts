@@ -33,8 +33,16 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api\"")
+        }
         release {
+            buildConfigField("String", "API_BASE_URL", "\"https://toepen.t-wezeman.nl/api\"")
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
