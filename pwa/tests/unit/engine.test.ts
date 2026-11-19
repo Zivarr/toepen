@@ -35,6 +35,12 @@ describe('engine', () => {
     expect(s.scores.Alice).toBe(2)
     expect(events).toEqual([{ type: 'undoEmpty' }])
   })
+  it('ignores actions for names that are only inherited properties', () => {
+    const s0 = mk()
+    const r = apply(s0, { type: 'penalty', name: 'constructor' }, 5)
+    expect(r.state).toBe(s0)
+    expect(r.events).toEqual([])
+  })
   it('fold adds round points minus one', () => {
     const { s } = run(mk(), { type: 'klop' }, { type: 'klop' }, { type: 'fold', name: 'Bob' })
     expect(s.scores.Bob).toBe(2)

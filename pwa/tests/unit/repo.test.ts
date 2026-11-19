@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../../src/storage/db'
 import {
-  addPlayerName, clearAuth, createLocalGroup, deleteLocalGame, deleteLocalGroup, getCurrentGame, getGames,
+  addPendingPlayer, addPlayerName, clearAuth, createLocalGroup, deleteLocalGame, deleteLocalGroup, getCurrentGame, getGames,
   getGroup, getGroups, getSettings, getToken, getUser, saveFinishedGame, setCurrentGame, setToken, setUser,
 } from '../../src/storage/repo'
 import { apply, newGame } from '../../src/game/engine'
@@ -71,6 +71,15 @@ describe('repo', () => {
     expect(await addPlayerName(g.key, '  jan  ')).toBe('added')
     expect(await addPlayerName(g.key, 'JAN')).toBe('exists')
     expect((await getGroup(g.key))!.playerNames).toEqual(['Jan'])
+  })
+
+  it('addPendingPlayer adds to playerNames and pendingPlayers once', async () => {
+    await db.groups.add({ ...serverGroup })
+    await addPendingPlayer('server:5', ' bert ')
+    await addPendingPlayer('server:5', 'BERT')
+    const g = (await getGroup('server:5'))!
+    expect(g.playerNames).toEqual(['Anna', 'Bert'])
+    expect(g.pendingPlayers).toEqual(['Bert'])
   })
 
   it('current game round-trips through storage with history', async () => {

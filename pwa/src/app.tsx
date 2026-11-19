@@ -8,6 +8,8 @@ import type { User } from './types'
 import { Login } from './screens/Login'
 import { Groups } from './screens/Groups'
 import { GroupHome } from './screens/GroupHome'
+import { PlayerSetup } from './screens/PlayerSetup'
+import { Game } from './screens/Game'
 import { ToastHost } from './components/Toast'
 
 const TITLES: Record<string, string> = {
@@ -72,6 +74,8 @@ export function App() {
   let screen
   if (route.name === 'groups') screen = <Groups />
   else if (route.name === 'group') screen = <GroupHome groupKey={route.params.key} />
+  else if (route.name === 'setup') screen = <PlayerSetup groupKey={route.params.key} />
+  else if (route.name === 'game') screen = <Game />
   else
     screen = (
       <main class="screen" data-route={route.name}>

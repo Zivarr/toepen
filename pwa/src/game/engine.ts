@@ -71,7 +71,7 @@ export function apply(s: GameState, a: Action, now: number): { state: GameState;
     case 'penalty':
     case 'fold':
     case 'boer': {
-      if (!(a.name in s.scores) || isEliminated(s, a.name)) return ignore
+      if (!Object.hasOwn(s.scores, a.name) || isEliminated(s, a.name)) return ignore
       const cur = s.scores[a.name]
       const max = s.maxPenaltyPoints
       let score = cur

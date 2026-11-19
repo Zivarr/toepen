@@ -78,6 +78,21 @@ export async function addPlayerName(key: GroupKey, name: string): Promise<'added
   })
 }
 
+/** Adds a name to both playerNames and pendingPlayers (offline add on a server group). */
+export async function addPendingPlayer(key: GroupKey, name: string): Promise<void> {
+  await db.transaction('rw', db.groups, async () => {
+    const group = await db.groups.get(key)
+    if (!group) throw new Error(`Unknown group ${key}`)
+    const clean = titleCase(name)
+    const n = normalise(clean)
+    const playerNames = group.playerNames.some((p) => normalise(p) === n) ? group.playerNames : [...group.playerNames, clean]
+    const pendingPlayers = group.pendingPlayers.some((p) => normalise(p) === n)
+      ? group.pendingPlayers
+      : [...group.pendingPlayers, clean]
+    await db.groups.update(key, { playerNames, pendingPlayers })
+  })
+}
+
 export async function getCurrentGame(): Promise<CurrentGame | null> {
   return (await kvGet<CurrentGame>('currentGame')) ?? null
 }

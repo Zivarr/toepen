@@ -57,3 +57,25 @@ input { font: inherit; padding: 12px; border-radius: 8px; border: 1px solid var(
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .toast { position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); background: #222; color: #fff; padding: 12px 16px; border-radius: 10px; text-align: center; z-index: 20; }
 .login { max-width: 420px; margin: 0 auto; }
+
+.back { text-decoration: none; }
+.wide { width: 100%; }
+.add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.add-row input { flex: 1; min-width: 0; }
+.player-pick { width: 100%; display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--accent); background: var(--primary-dark); color: #fff; font: inherit; cursor: pointer; }
+.player-pick.picked { background: var(--accent); font-weight: 700; }
+.seat { background: #fff; color: var(--primary); border-radius: 999px; min-width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.selected-list { padding-left: 0; list-style-position: inside; }
+.selected-row { display: flex; justify-content: space-between; align-items: center; background: var(--primary-dark); border-radius: 10px; padding: 6px 6px 6px 14px; }
+.remove-btn { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--remove); color: #fff; font-size: 1rem; cursor: pointer; }
+.game-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.timer { font-variant-numeric: tabular-nums; font-size: 1.3rem; font-weight: 700; }
+.player-row.out { opacity: 0.4; }
+.player-info { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.player-name { font-weight: 700; font-size: 1.15rem; flex: 1; }
+.tally { letter-spacing: 1px; }
+.score { font-size: 1.3rem; font-weight: 700; min-width: 1.5em; text-align: right; }
+.player-actions { display: flex; gap: 6px; }
+.player-actions .btn { flex: 1; padding: 10px 6px; font-size: 0.9rem; }
+.winner { font-size: 1.5rem; font-weight: 700; }
+.score-line { display: flex; justify-content: space-between; margin-bottom: 0; }
