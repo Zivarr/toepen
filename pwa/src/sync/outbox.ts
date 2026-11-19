@@ -9,6 +9,11 @@ export interface FlushResult {
   pending: number
 }
 
+/** Tells the UI that sync state changed (badge, group lists). No-op outside a browser. */
+export function notifySync(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('toepen:sync'))
+}
+
 let running: Promise<FlushResult> | null = null
 let rerun = false
 
@@ -99,6 +104,7 @@ export function flushOutbox(): Promise<FlushResult> {
   }
   running = runAll().finally(() => {
     running = null
+    notifySync()
   })
   return running
 }

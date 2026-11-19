@@ -105,3 +105,7 @@ export const setUser = (u: User): Promise<void> => kvSet('user', u)
 export async function clearAuth(): Promise<void> {
   await db.kv.bulkDelete(['token', 'user', 'etag'])
 }
+
+export async function setLocalMaxPenalty(key: GroupKey, maxPenaltyPoints: number): Promise<void> {
+  await db.groups.update(key, { maxPenaltyPoints })
+}

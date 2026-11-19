@@ -45,7 +45,7 @@ function srvGroup(over: Partial<Group> = {}): Group {
   return {
     id: 5, name: 'Werk', creator: 'tim', max_penalty_points: 10,
     players: [{ id: 1, name: 'Anna', games_played: 1 }, { id: 2, name: 'Bob', games_played: 1 }],
-    games: [{ ...upload('srv-1'), recorded_by: 'kees' }], ...over,
+    games: [{ ...upload('srv-1'), group_id: 5, recorded_by: 'kees' }], ...over,
   }
 }
 

@@ -1,6 +1,6 @@
 import { getToken } from '../storage/repo'
 import { checkSyncRequests } from './requests'
-import { flushOutbox } from './outbox'
+import { flushOutbox, notifySync } from './outbox'
 import { refresh } from './refresh'
 
 let cycle: Promise<void> | null = null
@@ -31,6 +31,7 @@ export function runSyncCycle(): Promise<void> {
     } while (rerun)
   })().finally(() => {
     cycle = null
+    notifySync()
   })
   return cycle
 }
