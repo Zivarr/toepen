@@ -13,6 +13,11 @@ import { Game } from './screens/Game'
 import { Results } from './screens/Results'
 import { Leaderboard } from './screens/Leaderboard'
 import { Settings } from './screens/Settings'
+import { Users } from './screens/admin/Users'
+import { AdminGroups } from './screens/admin/AdminGroups'
+import { Requests } from './screens/admin/Requests'
+import { RequestDetail } from './screens/admin/RequestDetail'
+import { Bin } from './screens/admin/Bin'
 import { ToastHost } from './components/Toast'
 
 const TITLES: Record<string, string> = {
@@ -82,6 +87,11 @@ export function App() {
   else if (route.name === 'results') screen = <Results groupKey={route.params.key} />
   else if (route.name === 'leaderboard') screen = <Leaderboard groupKey={route.params.key} />
   else if (route.name === 'settings') screen = <Settings />
+  else if (route.name === 'adminUsers') screen = <Users />
+  else if (route.name === 'adminGroups') screen = <AdminGroups />
+  else if (route.name === 'adminRequests') screen = <Requests />
+  else if (route.name === 'adminRequest') screen = <RequestDetail id={route.params.id} />
+  else if (route.name === 'adminBin') screen = <Bin />
   else
     screen = (
       <main class="screen" data-route={route.name}>

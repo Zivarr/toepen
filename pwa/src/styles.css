@@ -88,3 +88,8 @@ input { font: inherit; padding: 12px; border-radius: 8px; border: 1px solid var(
 .lb { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .lb th, .lb td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--accent); white-space: nowrap; }
 .lb th:first-child, .lb td:first-child { text-align: left; }
+
+.admin-nav { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; }
+.admin-nav a { text-decoration: none; padding: 4px 0; }
+.admin-nav a.active { color: #fff; font-weight: 700; border-bottom: 2px solid #fff; }
+.select { font: inherit; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); background: #fff; color: #111; width: 100%; }
