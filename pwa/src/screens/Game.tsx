@@ -59,7 +59,10 @@ export function Game() {
   const { state } = cur
 
   function dispatch(action: Action): void {
-    queue.current = queue.current.then(() => run(action)).catch((e) => console.warn('Actie mislukt', e))
+    queue.current = queue.current.then(() => run(action)).catch((e) => {
+      console.warn('Actie mislukt', e)
+      toast('Opslaan mislukt, probeer opnieuw')
+    })
   }
 
   async function run(action: Action) {
@@ -72,11 +75,12 @@ export function Game() {
     }
     if (r.state === base.state) return
     if (r.state.isOver) {
-      latest.current = null
+      // latest stays untouched until the save succeeded, so a failed save can be retried by tapping again.
       const user = await getUser()
       if (!user) throw new Error('Niet ingelogd')
       await saveFinishedGame(base.groupKey, r.state, user)
-      await setCurrentGame(null)
+      latest.current = null
+      await setCurrentGame(null).catch((e) => console.warn('Huidig spel wissen mislukt', e))
       void runSyncCycle()
       setFinished({ groupKey: base.groupKey, state: r.state })
       return

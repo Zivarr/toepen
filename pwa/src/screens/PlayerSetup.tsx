@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
-import { addPendingPlayer, addPlayerName, getGames, getGroup, setCurrentGame } from '../storage/repo'
+import { addPendingPlayer, addPlayerName, getCurrentGame, getGames, getGroup, setCurrentGame } from '../storage/repo'
 import { addPlayer } from '../api/endpoints'
 import { ApiError, NetworkError } from '../api/client'
 import { newGame } from '../game/engine'
@@ -8,6 +8,7 @@ import { findMatch, titleCase } from '../players/match'
 import { navigate } from '../router'
 import type { CachedGroup, GroupKey } from '../types'
 import { Button } from '../components/Button'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Dialog } from '../components/Dialog'
 import { toast } from '../components/Toast'
 
@@ -20,6 +21,7 @@ export function PlayerSetup({ groupKey }: { groupKey: string }) {
   const [selected, setSelected] = useState<string[]>([])
   const [max, setMax] = useState('')
   const [name, setName] = useState('')
+  const [confirmReplace, setConfirmReplace] = useState(false)
   const [similar, setSimilar] = useState<{ typed: string; existing: string } | null>(null)
 
   useEffect(() => {
@@ -111,6 +113,14 @@ export function PlayerSetup({ groupKey }: { groupKey: string }) {
 
   async function start() {
     if (!canStart) return
+    if (await getCurrentGame()) {
+      setConfirmReplace(true)
+      return
+    }
+    await begin()
+  }
+
+  async function begin() {
     await setCurrentGame({ groupKey: key, state: newGame(selected, maxNum, Date.now()) })
     navigate('#/game')
   }
@@ -186,6 +196,20 @@ export function PlayerSetup({ groupKey }: { groupKey: string }) {
       <Button class="wide" disabled={!canStart} onClick={start}>
         Start spel
       </Button>
+
+      {confirmReplace && (
+        <ConfirmDialog
+          title="Spel loopt nog"
+          message="Er loopt nog een spel. Als je een nieuw spel start, gaat dat spel verloren."
+          confirmLabel="Nieuw spel starten"
+          danger
+          onCancel={() => setConfirmReplace(false)}
+          onConfirm={() => {
+            setConfirmReplace(false)
+            void begin()
+          }}
+        />
+      )}
 
       {similar && (
         <Dialog title={`Bedoel je ${similar.existing}?`} onClose={() => setSimilar(null)}>
