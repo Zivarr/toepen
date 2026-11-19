@@ -130,6 +130,24 @@
             android:layout_height="wrap_content"
             android:text="@string/restore_current"
             android:padding="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnUploadServer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/upload_server"
+            android:padding="12dp"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:id="@+id/tvUploadStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/white"
+            android:visibility="gone"
+            android:layout_marginTop="-16dp"
             android:layout_marginBottom="24dp" />
 
         <!-- Section: Gevaarlijke acties -->

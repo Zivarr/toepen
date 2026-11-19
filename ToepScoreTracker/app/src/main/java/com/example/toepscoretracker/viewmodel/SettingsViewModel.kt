@@ -15,6 +15,9 @@ import com.example.toepscoretracker.ProfileManager
 import com.example.toepscoretracker.database.AppDatabase
 import com.example.toepscoretracker.database.Game
 import com.example.toepscoretracker.repository.GameRepository
+import com.example.toepscoretracker.upload.HttpUploadApi
+import com.example.toepscoretracker.upload.ServerUploader
+import com.example.toepscoretracker.upload.UploadResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,6 +49,12 @@ class SettingsViewModel(
             repositoryProvider(profile).deleteShortGames(60_000L)
         }
     }
+
+    suspend fun uploadToServer(profile: String, username: String, password: String): UploadResult =
+        withContext(Dispatchers.IO) {
+            val games = repositoryProvider(profile).getAllGames()
+            ServerUploader(HttpUploadApi()).upload(profile, games, username, password)
+        }
 
     suspend fun backupToDownloads(context: Context, profile: String): String = withContext(Dispatchers.IO) {
         Log.d(TAG, "backupToDownloads: start, profile=$profile, SDK=${Build.VERSION.SDK_INT}")
