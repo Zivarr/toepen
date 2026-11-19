@@ -111,4 +111,16 @@ class SyncPayloadTest {
         assertEquals(10, g.getInt("max_penalty_points"))
         assertFalse(g.has("group_id"))
     }
+
+    @Test fun `whitespace runs are collapsed before duplicate check`() {
+        val r = buildSyncPayload("Work", listOf(game(players = listOf("Ravi  K", "Ravi K"), winner = "")), ams)
+        assertEquals(0, r.included)
+        assertEquals(1, r.skipped)
+    }
+
+    @Test fun `winner matched after whitespace collapse and sent as collapsed name`() {
+        val j = firstGame(game(players = listOf("Ravi  K", "Kees"), winner = "ravi k"))
+        assertEquals("Ravi K", j.getString("winner"))
+        assertEquals("Ravi K", j.getJSONArray("players").getJSONObject(0).getString("name"))
+    }
 }

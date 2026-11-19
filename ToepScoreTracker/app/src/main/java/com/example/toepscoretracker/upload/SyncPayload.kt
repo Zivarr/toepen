@@ -11,6 +11,10 @@ import java.util.UUID
 data class PayloadResult(val json: JSONObject, val included: Int, val skipped: Int)
 
 private const val NO_WINNER = "Niemand"
+private val WHITESPACE = Regex("(?U)\\s+")
+
+/** Like the server's Names::titleCase minus the capitalisation: collapse whitespace runs, then trim. */
+private fun collapse(name: String): String = name.replace(WHITESPACE, " ").trim()
 
 fun gameUuid(profile: String, game: Game): String =
     UUID.nameUUIDFromBytes(
@@ -52,14 +56,14 @@ fun buildSyncPayload(
 
 private fun toGameUpload(profile: String, game: Game, zone: TimeZone): JSONObject? {
     val startedAt = toIsoTimestamp(game.timestamp, zone) ?: return null
-    val names = game.playerNames.map { it.trim() }
+    val names = game.playerNames.map { collapse(it) }
     if (names.size !in 2..8) return null
-    if (names.any { it.isEmpty() || it.length > 40 }) return null
+    if (names.any { it.isEmpty() || it.codePointCount(0, it.length) > 40 }) return null
     if (names.map { it.lowercase() }.toSet().size != names.size) return null
     if (game.maxPenaltyPoints !in 1..100) return null
     if (game.duration < 0) return null
 
-    val rawWinner = game.winnerName.trim()
+    val rawWinner = collapse(game.winnerName)
     val endedEarly = rawWinner.isEmpty()
     val winner: String? = when {
         endedEarly || rawWinner.equals(NO_WINNER, ignoreCase = true) -> null
