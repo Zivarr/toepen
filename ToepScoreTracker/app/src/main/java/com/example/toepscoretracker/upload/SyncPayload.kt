@@ -16,9 +16,9 @@ private val WHITESPACE = Regex("(?U)\\s+")
 /** Like the server's Names::titleCase minus the capitalisation: collapse whitespace runs, then trim. */
 private fun collapse(name: String): String = name.replace(WHITESPACE, " ").trim()
 
-fun gameUuid(profile: String, game: Game): String =
+fun gameUuid(game: Game): String =
     UUID.nameUUIDFromBytes(
-        ("$profile|${game.timestamp}|${game.playerNames.joinToString("|")}|" +
+        ("${game.timestamp}|${game.playerNames.joinToString("|")}|" +
             "${game.finalScores.joinToString("|")}|${game.duration}").toByteArray(Charsets.UTF_8)
     ).toString()
 
@@ -43,9 +43,10 @@ fun buildSyncPayload(
 ): PayloadResult {
     val array = JSONArray()
     var skipped = 0
+    val seen = HashSet<String>()
     for (game in games) {
-        val upload = toGameUpload(profile, game, zone)
-        if (upload == null) skipped++ else array.put(upload)
+        val upload = toGameUpload(game, zone)
+        if (upload == null || !seen.add(upload.getString("id"))) skipped++ else array.put(upload)
     }
     val json = JSONObject()
         .put("source", "android")
@@ -54,7 +55,7 @@ fun buildSyncPayload(
     return PayloadResult(json, array.length(), skipped)
 }
 
-private fun toGameUpload(profile: String, game: Game, zone: TimeZone): JSONObject? {
+private fun toGameUpload(game: Game, zone: TimeZone): JSONObject? {
     val startedAt = toIsoTimestamp(game.timestamp, zone) ?: return null
     val names = game.playerNames.map { collapse(it) }
     if (names.size !in 2..8) return null
@@ -79,7 +80,7 @@ private fun toGameUpload(profile: String, game: Game, zone: TimeZone): JSONObjec
         )
     }
     return JSONObject()
-        .put("id", gameUuid(profile, game))
+        .put("id", gameUuid(game))
         .put("started_at", startedAt)
         .put("duration_ms", game.duration)
         .put("max_penalty_points", game.maxPenaltyPoints)

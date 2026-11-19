@@ -36,11 +36,25 @@ class SyncPayloadTest {
         assertNull(toIsoTimestamp("2026-11-18 21:04", ams))
     }
 
-    @Test fun `uuid is stable for the same game and differs per profile`() {
+    @Test fun `uuid is stable for the same game and independent of the profile name`() {
         val g = game()
-        assertEquals(gameUuid("Work", g), gameUuid("Work", g.copy()))
-        assertNotEquals(gameUuid("Work", g), gameUuid("KVW", g))
-        assertEquals(36, gameUuid("Work", g).length)
+        assertEquals(gameUuid(g), gameUuid(g.copy()))
+        val a = buildSyncPayload("Work", listOf(g), ams).json.getJSONArray("games").getJSONObject(0)
+        val b = buildSyncPayload("Renamed", listOf(g), ams).json.getJSONArray("games").getJSONObject(0)
+        assertEquals(a.getString("id"), b.getString("id"))
+        assertEquals(36, gameUuid(g).length)
+    }
+
+    @Test fun `different games get different uuids`() {
+        assertNotEquals(gameUuid(game()), gameUuid(game(ts = "18-11-26 21:04:06")))
+        assertNotEquals(gameUuid(game()), gameUuid(game(scores = listOf(10, 5))))
+    }
+
+    @Test fun `identical rows are sent once and counted as skipped`() {
+        val r = buildSyncPayload("Work", listOf(game(), game()), ams)
+        assertEquals(1, r.included)
+        assertEquals(1, r.skipped)
+        assertEquals(1, r.json.getJSONArray("games").length())
     }
 
     @Test fun `empty winner becomes ended early`() {

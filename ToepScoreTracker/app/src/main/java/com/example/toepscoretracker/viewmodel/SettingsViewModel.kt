@@ -18,6 +18,7 @@ import com.example.toepscoretracker.repository.GameRepository
 import com.example.toepscoretracker.upload.HttpUploadApi
 import com.example.toepscoretracker.upload.ServerUploader
 import com.example.toepscoretracker.upload.UploadResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,8 +53,14 @@ class SettingsViewModel(
 
     suspend fun uploadToServer(profile: String, username: String, password: String): UploadResult =
         withContext(Dispatchers.IO) {
-            val games = repositoryProvider(profile).getAllGames()
-            ServerUploader(HttpUploadApi()).upload(profile, games, username, password)
+            try {
+                val games = repositoryProvider(profile).getAllGames()
+                ServerUploader(HttpUploadApi()).upload(profile, games, username, password)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                UploadResult.Failed("Er ging iets mis bij het versturen")
+            }
         }
 
     suspend fun backupToDownloads(context: Context, profile: String): String = withContext(Dispatchers.IO) {
