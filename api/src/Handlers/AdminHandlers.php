@@ -53,9 +53,10 @@ final class AdminHandlers
     private static function userShape(PDO $pdo, int $id): array
     {
         $st = $pdo->prepare(
-            'SELECT u.id, u.username, u.is_admin, u.disabled_at, MAX(t.last_used_at) AS last_used_at
+            'SELECT u.id, u.username, u.is_admin, u.disabled_at, (u.password_hash IS NULL) AS invite_pending,
+                    MAX(t.last_used_at) AS last_used_at
              FROM users u LEFT JOIN auth_tokens t ON t.user_id = u.id
-             WHERE u.id = ? GROUP BY u.id, u.username, u.is_admin, u.disabled_at'
+             WHERE u.id = ? GROUP BY u.id, u.username, u.is_admin, u.disabled_at, u.password_hash'
         );
         $st->execute([$id]);
         $u = $st->fetch();
@@ -67,6 +68,7 @@ final class AdminHandlers
             'username' => $u['username'],
             'is_admin' => (bool)$u['is_admin'],
             'disabled' => $u['disabled_at'] !== null,
+            'invite_pending' => (bool)$u['invite_pending'],
             'last_used_at' => $u['last_used_at'] === null ? null : Groups::iso($u['last_used_at']),
         ];
     }
@@ -87,7 +89,10 @@ final class AdminHandlers
             throw self::invalid('gebruikersnaam moet 3 tot 30 tekens zijn (letters, cijfers, punt, streepje, underscore).');
         }
         $password = $b['password'] ?? null;
-        if (!is_string($password) || mb_strlen($password, 'UTF-8') < 8) {
+        if ($password === '') {
+            $password = null; // empty form field: invite link instead of a password
+        }
+        if ($password !== null && (!is_string($password) || mb_strlen($password, 'UTF-8') < 8)) {
             throw self::invalid('wachtwoord moet minimaal 8 tekens zijn.');
         }
         $isAdmin = $b['is_admin'] ?? false;
@@ -101,15 +106,41 @@ final class AdminHandlers
             throw $taken;
         }
         try {
-            $ctx->pdo->prepare('INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)')
-                ->execute([$username, password_hash($password, PASSWORD_DEFAULT), $isAdmin ? 1 : 0]);
+            [$id, $link] = self::atomic($ctx->pdo, function () use ($ctx, $username, $password, $isAdmin) {
+                $ctx->pdo->prepare('INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)')->execute([
+                    $username,
+                    $password === null ? null : password_hash($password, PASSWORD_DEFAULT),
+                    $isAdmin ? 1 : 0,
+                ]);
+                $id = (int)$ctx->pdo->lastInsertId();
+                return [$id, $password === null ? PasswordLinks::create($ctx->pdo, $id, 'invite') : null];
+            });
         } catch (PDOException $e) {
             if ($e->getCode() === '23000') {
                 throw $taken;
             }
             throw $e;
         }
-        return new Response(201, ['user' => self::userShape($ctx->pdo, (int)$ctx->pdo->lastInsertId())]);
+        $body = ['user' => self::userShape($ctx->pdo, $id)];
+        if ($link !== null) {
+            $body['link'] = $link;
+        }
+        return new Response(201, $body);
+    }
+
+    /** POST /admin/users/{id}/password-link: invite link if the user has no password yet, else reset link. */
+    public static function passwordLink(Request $req, Ctx $ctx, array $params): Response
+    {
+        $id = (int)$params['id'];
+        $st = $ctx->pdo->prepare('SELECT password_hash FROM users WHERE id = ?');
+        $st->execute([$id]);
+        $row = $st->fetch();
+        if (!$row) {
+            throw self::userNotFound();
+        }
+        $purpose = $row['password_hash'] === null ? 'invite' : 'reset';
+        $link = self::atomic($ctx->pdo, fn() => PasswordLinks::create($ctx->pdo, $id, $purpose));
+        return new Response(201, ['link' => $link]);
     }
 
     /** PATCH /admin/users/{id}: any of password, disabled, is_admin. */

@@ -28,6 +28,7 @@ final class App
             ['POST', '/admin/users', [AdminHandlers::class, 'createUser'], 'admin'],
             ['PATCH', '/admin/users/{id}', [AdminHandlers::class, 'patchUser'], 'admin'],
             ['POST', '/admin/users/{id}/revoke-tokens', [AdminHandlers::class, 'revokeTokens'], 'admin'],
+            ['POST', '/admin/users/{id}/password-link', [AdminHandlers::class, 'passwordLink'], 'admin'],
             ['GET', '/admin/groups', [AdminHandlers::class, 'listGroups'], 'admin'],
             ['POST', '/admin/groups/merge', [AdminHandlers::class, 'mergeGroups'], 'admin'],
             ['POST', '/admin/groups/{id}/members', [AdminHandlers::class, 'addMember'], 'admin'],
