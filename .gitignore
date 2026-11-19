@@ -3,3 +3,6 @@ api/vendor/
 api/config.php
 upload/
 api/.phpunit.result.cache
+pwa/node_modules/
+pwa/dist/
+pwa/test-results/
