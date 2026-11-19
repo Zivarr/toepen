@@ -4,7 +4,7 @@ import { Button } from '../../components/Button'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { Dialog } from '../../components/Dialog'
 import { toast } from '../../components/Toast'
-import { refresh } from '../../sync/refresh'
+import { runSyncCycle } from '../../sync/triggers'
 import { AdminShell, attempt, groupPlayers, useAdminData, type SimplePlayer } from './common'
 
 type Action =
@@ -22,20 +22,20 @@ export function AdminGroups() {
   async function done(msg?: string) {
     setAction(null)
     if (msg) toast(msg)
-    void refresh().catch(() => {})
+    void runSyncCycle()
     await reload()
   }
 
   async function removeMember(g: AdminGroup, userId: number) {
     if (await attempt(() => admin.removeMember(g.id, userId))) {
-      void refresh().catch(() => {})
+      void runSyncCycle()
       void reload()
     }
   }
 
   async function addMember(g: AdminGroup, userId: number) {
     if (await attempt(() => admin.addMember(g.id, userId))) {
-      void refresh().catch(() => {})
+      void runSyncCycle()
       void reload()
     }
   }

@@ -2,7 +2,14 @@
 declare(strict_types=1);
 
 // Resets the DEV database (config.php) for the Playwright e2e tests. NOT the PHPUnit test DB.
-// Usage: docker compose exec -T php php api/tests/seed_e2e.php
+// Usage: docker compose exec -T -e TOEPEN_E2E_SEED=1 php php api/tests/seed_e2e.php
+// Production uses the same db name/host, so the explicit TOEPEN_E2E_SEED=1 opt-in is required too.
+
+if (getenv('TOEPEN_E2E_SEED') !== '1') {
+    fwrite(STDERR, "Refusing to seed: set TOEPEN_E2E_SEED=1 to confirm this is the local dev database.
+");
+    exit(1);
+}
 
 $config = require __DIR__ . '/../config.php';
 $allowedHosts = ['mysql', 'localhost', '127.0.0.1'];

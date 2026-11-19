@@ -22,6 +22,7 @@ is geüpload naar https://toepen.t-wezeman.nl/.
 - [ ] Zet vliegtuigmodus uit.
 - [ ] Binnen enkele seconden verdwijnt de melding "1 wacht op upload".
 - [ ] Het spel staat nu ook op de server (controleer bijvoorbeeld op een tweede apparaat).
+- [ ] Exporteren van mislukte uploads werkt (bestand wordt gedownload/gedeeld).
 
 ## 4. App sluiten tijdens een spel en verdergaan
 - [ ] Start een spel en geef een paar strafpunten.

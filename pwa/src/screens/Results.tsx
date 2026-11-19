@@ -3,7 +3,7 @@ import { getGames, getGroup, getUser, deleteLocalGame } from '../storage/repo'
 import { db } from '../storage/db'
 import { deleteGame } from '../api/endpoints'
 import { ApiError, NetworkError } from '../api/client'
-import { refresh } from '../sync/refresh'
+import { runSyncCycle } from '../sync/triggers'
 import { notifySync } from '../sync/outbox'
 import { formatDuration } from '../util/format'
 import { Button } from '../components/Button'
@@ -95,7 +95,7 @@ export function Results({ groupKey }: { groupKey: string }) {
       } else {
         await deleteGame(g.id)
         await db.kv.delete('etag')
-        await refresh()
+        await runSyncCycle()
       }
       notifySync()
       toast('Spel verwijderd')
@@ -123,7 +123,7 @@ export function Results({ groupKey }: { groupKey: string }) {
             <li key={g.id} id={`game-${g.id}`} class={`card result${hl === g.id ? ' highlight' : ''}`}>
               <div class="result-head">
                 <span>{formatDate(g.started_at)}</span>
-                {q && <span class="tag tag-warn">{q === 'failed' ? 'upload mislukt' : 'nog niet geüpload'}</span>}
+                {q && <span class="tag tag-warn">{q === 'failed' ? 'Kan niet uploaden' : 'nog niet geüpload'}</span>}
               </div>
               <p class="winner-line">Winnaar: {winnerLabel(g)}</p>
               <ul class="plain">

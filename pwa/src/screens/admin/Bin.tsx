@@ -1,7 +1,7 @@
 import { admin } from '../../api/endpoints'
 import { Button } from '../../components/Button'
 import { toast } from '../../components/Toast'
-import { refresh } from '../../sync/refresh'
+import { runSyncCycle } from '../../sync/triggers'
 import { AdminShell, attempt, formatDateTime, useAdminData } from './common'
 
 export function Bin() {
@@ -13,7 +13,7 @@ export function Bin() {
   async function restore(id: string) {
     if (await attempt(() => admin.restoreGame(id))) {
       toast('Spel hersteld')
-      void refresh().catch(() => {})
+      void runSyncCycle()
       void reload()
     }
   }

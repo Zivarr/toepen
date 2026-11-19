@@ -5,7 +5,7 @@ import { navigate } from '../../router'
 import { Button } from '../../components/Button'
 import { Dialog } from '../../components/Dialog'
 import { toast } from '../../components/Toast'
-import { refresh } from '../../sync/refresh'
+import { runSyncCycle } from '../../sync/triggers'
 import { AdminShell, errorMessage, formatDateTime, groupPlayers, useAdminData, type SimplePlayer } from './common'
 import { STATUS } from './Requests'
 
@@ -70,7 +70,7 @@ export function RequestDetail({ id }: { id: string }) {
     }
     setBusy(false)
     toast(okMsg)
-    await refresh().catch(() => {})
+    await runSyncCycle()
     navigate('#/admin/requests')
   }
 

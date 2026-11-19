@@ -1,11 +1,23 @@
 import preact from '@preact/preset-vite'
 import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
-import pkg from './package.json' with { type: 'json' }
+import { execSync } from 'node:child_process'
+
+function appVersion(): string {
+  const d = new Date()
+  const p = (n: number) => String(n).padStart(2, '0')
+  const stamp = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+  try {
+    const hash = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+    return hash ? `${stamp} (${hash})` : stamp
+  } catch {
+    return stamp // no git available: timestamp only
+  }
+}
 
 export default defineConfig({
   base: '/',
-  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  define: { __APP_VERSION__: JSON.stringify(appVersion()) },
   plugins: [
     preact(),
     VitePWA({

@@ -109,8 +109,13 @@ export function flushOutbox(): Promise<FlushResult> {
   return running
 }
 
+/** Puts failed items back in the queue (without flushing). */
+export async function requeueFailed(): Promise<void> {
+  await db.outbox.where('status').equals('failed').modify({ status: 'pending', reason: undefined })
+}
+
 /** Puts failed items back in the queue and flushes. */
 export async function retryFailed(): Promise<void> {
-  await db.outbox.where('status').equals('failed').modify({ status: 'pending', reason: undefined })
+  await requeueFailed()
   await flushOutbox()
 }

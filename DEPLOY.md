@@ -26,8 +26,10 @@ Let op: een wachtwoord resetten (PATCH op de gebruiker) logt bestaande apparaten
 ## PWA-bestanden
 
 - Upload alles in `upload/` naar de document root van het subdomein. `api/config.php` zit er niet in en blijft op de server staan.
+- **Volgorde:** upload eerst al het andere (`assets/`, `icons/`, `workbox-<hash>.js`, het manifest) en als allerlaatste `sw.js` en `index.html`. Anders verwijzen die naar bestanden die nog niet op de server staan.
+- `workbox-<hash>.js` staat in de root naast `sw.js` en is nodig: `sw.js` laadt dat bestand. Upload het dus altijd mee (de naam verandert per build).
 - `sw.js` en `index.html` moeten bij elke release overschreven worden, anders krijgen gebruikers de nieuwe versie niet.
-- De overige bestanden (de gehashte bestanden in `assets/`) mogen zich ophopen; oude bestanden mag je verwijderen.
+- De gehashte bestanden in `assets/` mogen zich ophopen. Verwijder oude bestanden pas na een paar dagen, want apparaten met een oudere versie hebben ze mogelijk nog nodig.
 - Installeren op iPhone: open de site in Safari, tik op *Deel* en kies *Zet op beginscherm*.
 - Installeren op Android (Chrome): open het menu en kies *App installeren* (of *Toevoegen aan startscherm*).
 - Een nieuwe versie verschijnt als de melding "Nieuwe versie beschikbaar – vernieuwen" in de app; de gebruiker tikt erop om bij te werken. Tijdens een spel wordt de melding niet getoond.
@@ -35,7 +37,7 @@ Let op: een wachtwoord resetten (PATCH op de gebruiker) logt bestaande apparaten
 ## Updaten
 
 1. Bouw opnieuw met `node scripts/make-upload.mjs`.
-2. Upload de gewijzigde bestanden uit `upload/` (PWA) en `upload/api/` (API) naar de server; overschrijf `sw.js` en `index.html` altijd. Overschrijf `config.php` niet; die staat er al.
+2. Upload de gewijzigde bestanden uit `upload/` (PWA) en `upload/api/` (API) naar de server, in de volgorde hierboven: `sw.js` en `index.html` als laatste. Sla `api/install.php` over (die heb je na de eerste installatie verwijderd en hoort er niet meer te staan). Overschrijf `api/config.php` niet; dat bestand zit niet in `upload/` en staat al op de server.
 3. Voer nieuwe `api/migrations/NNN_*.sql`-bestanden in phpMyAdmin uit, op volgorde van nummer, en alleen de bestanden die je nog niet eerder hebt uitgevoerd.
 
 ## Lokaal ontwikkelen

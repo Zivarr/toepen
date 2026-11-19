@@ -10,7 +10,7 @@ test('login, play a game to the end, see it on the leaderboard', async ({ page }
   await playToTheEnd(page, 3)
 
   await page.getByRole('link', { name: 'Naar groep' }).click()
-  await page.getByRole('link', { name: 'Klassement' }).click()
+  await page.getByRole('link', { name: 'Ranglijst' }).click()
   const row = page.getByRole('row', { name: /Kees/ })
   await expect(row.getByRole('cell').nth(1)).toHaveText('1')
   await expect(row.getByRole('cell').nth(2)).toHaveText('1')

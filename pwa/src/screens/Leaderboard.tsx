@@ -47,7 +47,7 @@ export function Leaderboard({ groupKey }: { groupKey: string }) {
           ‹ {group.name}
         </a>
       </p>
-      <h1>Klassement</h1>
+      <h1>Ranglijst</h1>
       {rows.length === 0 ? (
         <p class="muted">Nog geen spellen gespeeld.</p>
       ) : (

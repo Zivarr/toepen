@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { useRegisterSW } from 'virtual:pwa-register/preact'
 import { navigate, useRoute } from './router'
 import { clearAuth, getCurrentGame, getToken, getUser } from './storage/repo'
@@ -44,10 +44,23 @@ export function badgeText(n: number): string {
 
 export function App() {
   const route = useRoute()
+  // A new service worker must never reload the page during a game (e.g. another tab tapped "vernieuwen"):
+  // postpone the reload until the user leaves the game screen.
+  const routeRef = useRef(route.name)
+  routeRef.current = route.name
+  const reloadPending = useRef(false)
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
-  } = useRegisterSW()
+  } = useRegisterSW({
+    onNeedReload() {
+      if (routeRef.current === 'game') reloadPending.current = true
+      else window.location.reload()
+    },
+  })
+  useEffect(() => {
+    if (reloadPending.current && route.name !== 'game') window.location.reload()
+  }, [route.name])
   const [authed, setAuthed] = useState<boolean | null>(null)
   const [user, setUserState] = useState<User | null>(null)
   const [pending, setPending] = useState(0)

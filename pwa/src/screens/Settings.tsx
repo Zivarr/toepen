@@ -2,7 +2,8 @@ import { useEffect, useState } from 'preact/hooks'
 import { clearAuth, getSettings, getUser, setSettings } from '../storage/repo'
 import { db } from '../storage/db'
 import { logout } from '../api/endpoints'
-import { flushOutbox, notifySync, retryFailed } from '../sync/outbox'
+import { notifySync, requeueFailed } from '../sync/outbox'
+import { runSyncCycle } from '../sync/triggers'
 import { navigate } from '../router'
 import { Button } from '../components/Button'
 import { ConfirmDialog } from '../components/ConfirmDialog'
@@ -41,7 +42,8 @@ export function Settings() {
   async function retry() {
     setBusy(true)
     try {
-      await retryFailed()
+      await requeueFailed()
+      await runSyncCycle()
     } finally {
       setBusy(false)
       notifySync()
@@ -51,7 +53,7 @@ export function Settings() {
   async function flush() {
     setBusy(true)
     try {
-      await flushOutbox()
+      await runSyncCycle()
     } finally {
       setBusy(false)
     }
@@ -160,7 +162,7 @@ export function Settings() {
       {confirmLogout && (
         <ConfirmDialog
           title="Uitloggen"
-          message={`${items.length} ${items.length === 1 ? 'spel is' : 'spellen zijn'} nog niet geüpload. Ze blijven op dit apparaat en worden geüpload na de volgende keer inloggen.`}
+          message={`${items.length} ${items.length === 1 ? 'spel is' : 'spellen zijn'} nog niet geüpload. Ze blijven op dit apparaat bewaard.`}
           confirmLabel="Uitloggen"
           danger
           onConfirm={() => void doLogout()}
