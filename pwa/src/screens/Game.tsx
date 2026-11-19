@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { apply, isEliminated, newGame, type Action, type GameState } from '../game/engine'
 import { tally } from '../game/tally'
-import { getCurrentGame, getSettings, getUser, saveFinishedGame, setCurrentGame } from '../storage/repo'
+import { DEFAULT_SETTINGS, getCurrentGame, getSettings, getUser, saveFinishedGame, setCurrentGame } from '../storage/repo'
+import { useWakeLock } from '../util/wakeLock'
 import { runSyncCycle } from '../sync/triggers'
 import { navigate } from '../router'
 import type { DeviceSettings, GroupKey } from '../types'
@@ -16,7 +17,7 @@ type Current = { groupKey: GroupKey; state: GameState; id?: string }
 export function Game() {
   const [cur, setCur] = useState<Current | null | undefined>(undefined)
   const [finished, setFinished] = useState<Current | null>(null)
-  const [settings, setSettings] = useState<DeviceSettings>({ confirmPenalty: false, showRematch: true })
+  const [settings, setSettings] = useState<DeviceSettings>(DEFAULT_SETTINGS)
   const [now, setNow] = useState(Date.now())
   const [confirmPlayer, setConfirmPlayer] = useState<string | null>(null)
   const [confirmEnd, setConfirmEnd] = useState(false)
@@ -37,6 +38,9 @@ export function Game() {
     const t = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(t)
   }, [])
+
+  // Keep the screen on while a game is being played (not on the summary).
+  useWakeLock(settings.keepScreenOn && !!cur && !finished)
 
   if (finished) {
     return (

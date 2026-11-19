@@ -73,4 +73,5 @@ export interface OutboxItem {
 export interface DeviceSettings {
   confirmPenalty: boolean
   showRematch: boolean
+  keepScreenOn: boolean
 }

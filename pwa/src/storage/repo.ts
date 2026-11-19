@@ -125,8 +125,11 @@ export async function setCurrentGame(v: CurrentGame | null): Promise<void> {
   else await kvSet('currentGame', v)
 }
 
+export const DEFAULT_SETTINGS: DeviceSettings = { confirmPenalty: false, showRematch: true, keepScreenOn: true }
+
+/** Stored settings merged over the defaults, so options added later get their default on existing installs. */
 export async function getSettings(): Promise<DeviceSettings> {
-  return (await kvGet<DeviceSettings>('settings')) ?? { confirmPenalty: false, showRematch: true }
+  return { ...DEFAULT_SETTINGS, ...(await kvGet<Partial<DeviceSettings>>('settings')) }
 }
 export const setSettings = (s: DeviceSettings): Promise<void> => kvSet('settings', s)
 

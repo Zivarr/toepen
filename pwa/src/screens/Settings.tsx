@@ -111,6 +111,15 @@ export function Settings() {
           />
           Toon revanche-knop
         </label>
+        <label class="toggle">
+          <input
+            type="checkbox"
+            name="keepScreenOn"
+            checked={settings.keepScreenOn}
+            onChange={(e) => void toggle('keepScreenOn', e.currentTarget.checked)}
+          />
+          Scherm aan houden tijdens spel
+        </label>
       </div>
 
       <h2>Uploads</h2>

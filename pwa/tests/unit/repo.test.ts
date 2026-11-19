@@ -94,7 +94,12 @@ describe('repo', () => {
   })
 
   it('getSettings returns defaults', async () => {
-    expect(await getSettings()).toEqual({ confirmPenalty: false, showRematch: true })
+    expect(await getSettings()).toEqual({ confirmPenalty: false, showRematch: true, keepScreenOn: true })
+  })
+
+  it('getSettings fills in keepScreenOn for settings saved by an older version', async () => {
+    await db.kv.put({ key: 'settings', value: { confirmPenalty: true, showRematch: false } })
+    expect(await getSettings()).toEqual({ confirmPenalty: true, showRematch: false, keepScreenOn: true })
   })
 
   it('clearAuth keeps outbox', async () => {
