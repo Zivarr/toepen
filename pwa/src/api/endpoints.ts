@@ -30,11 +30,13 @@ export async function logout(): Promise<void> {
 }
 
 export async function linkInfo(code: string): Promise<LinkInfo> {
-  return (await request<LinkInfo>('GET', `/password-links/${encodeURIComponent(code)}`)).data!
+  // The code goes in the body, never in the URL path, so it stays out of server access logs.
+  return (await request<LinkInfo>('POST', '/password-links/lookup', { code })).data!
 }
 
 export async function redeemLink(code: string, password: string): Promise<{ token: string; user: User }> {
-  const r = await request<{ token: string; user: User }>('POST', `/password-links/${encodeURIComponent(code)}`, {
+  const r = await request<{ token: string; user: User }>('POST', '/password-links/redeem', {
+    code,
     password,
     device_name: deviceName(),
   })

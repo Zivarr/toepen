@@ -14,8 +14,9 @@ final class App
             ['POST', '/logout', [AuthHandlers::class, 'logout'], 'user'],
             ['GET', '/me', [AuthHandlers::class, 'me'], 'user'],
             ['POST', '/me/password', [AuthHandlers::class, 'changePassword'], 'user'],
-            ['GET', '/password-links/{code}', [AuthHandlers::class, 'linkInfo'], 'none'],
-            ['POST', '/password-links/{code}', [AuthHandlers::class, 'redeemLink'], 'none'],
+            // The link code travels in the body, never in the path, so it stays out of access logs.
+            ['POST', '/password-links/lookup', [AuthHandlers::class, 'linkInfo'], 'none'],
+            ['POST', '/password-links/redeem', [AuthHandlers::class, 'redeemLink'], 'none'],
             ['GET', '/groups', [GroupHandlers::class, 'list'], 'user'],
             ['PATCH', '/groups/{id}', [GroupHandlers::class, 'patch'], 'user'],
             ['POST', '/players', [GroupHandlers::class, 'addPlayer'], 'user'],

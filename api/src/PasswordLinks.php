@@ -12,8 +12,7 @@ final class PasswordLinks
      */
     public static function create(PDO $pdo, int $userId, string $purpose): array
     {
-        $pdo->prepare('UPDATE password_links SET used_at = UTC_TIMESTAMP() WHERE user_id = ? AND used_at IS NULL')
-            ->execute([$userId]);
+        self::invalidateFor($pdo, $userId);
         $code = bin2hex(random_bytes(32));
         $pdo->prepare(
             'INSERT INTO password_links (user_id, token_hash, purpose, expires_at)
@@ -51,6 +50,13 @@ final class PasswordLinks
             'purpose' => $row['purpose'],
             'expires_at' => Groups::iso($row['expires_at']),
         ];
+    }
+
+    /** Spends every open link of the user (a new link was made, or the password was set another way). */
+    public static function invalidateFor(PDO $pdo, int $userId): void
+    {
+        $pdo->prepare('UPDATE password_links SET used_at = UTC_TIMESTAMP() WHERE user_id = ? AND used_at IS NULL')
+            ->execute([$userId]);
     }
 
     /** Marks the link used; false when it was already used (e.g. a double submit). */

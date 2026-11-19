@@ -116,7 +116,12 @@ final class PasswordLinkTest extends TestCase
 
     private function redeem(string $code, string $password = 'nieuwwacht'): Response
     {
-        return $this->call('POST', "/password-links/$code", ['password' => $password, 'device_name' => 'iPhone']);
+        return $this->call('POST', '/password-links/redeem', ['code' => $code, 'password' => $password, 'device_name' => 'iPhone']);
+    }
+
+    private function lookup(string $code): Response
+    {
+        return $this->call('POST', '/password-links/lookup', ['code' => $code]);
     }
 
     private function login(string $username, string $password): Response
@@ -127,7 +132,7 @@ final class PasswordLinkTest extends TestCase
     public function test_link_info_returns_username_and_purpose(): void
     {
         [, $code] = $this->invited();
-        $res = $this->call('GET', "/password-links/$code");
+        $res = $this->lookup($code);
         $this->assertSame(200, $res->status);
         $this->assertSame('kees', $res->body['username']);
         $this->assertSame('invite', $res->body['purpose']);
@@ -158,7 +163,7 @@ final class PasswordLinkTest extends TestCase
     {
         [, $code] = $this->invited();
         $this->pdo()->exec('UPDATE password_links SET expires_at = UTC_TIMESTAMP() - INTERVAL 1 MINUTE');
-        $this->assertSame(404, $this->call('GET', "/password-links/$code")->status);
+        $this->assertSame(404, $this->lookup($code)->status);
         $this->assertSame(404, $this->redeem($code)->status);
     }
 
@@ -166,7 +171,7 @@ final class PasswordLinkTest extends TestCase
     {
         [$id, $code] = $this->invited();
         $this->pdo()->prepare('UPDATE users SET disabled_at = UTC_TIMESTAMP() WHERE id = ?')->execute([$id]);
-        $this->assertSame(404, $this->call('GET', "/password-links/$code")->status);
+        $this->assertSame(404, $this->lookup($code)->status);
         $this->assertSame(404, $this->redeem($code)->status);
     }
 
@@ -233,6 +238,50 @@ final class PasswordLinkTest extends TestCase
         }
         $res = $this->call('POST', '/me/password', ['current_password' => 'geheim123', 'new_password' => 'nieuwwacht'], $kees['token']);
         $this->assertSame(429, $res->status);
+    }
+
+    // ---- Final review fixes ----------------------------------------------------------------------
+
+    public function test_admin_password_set_invalidates_open_links(): void
+    {
+        $admin = $this->admin();
+        $res = $this->call('POST', '/admin/users', ['username' => 'kees', 'is_admin' => false], $admin['token']);
+        [$id, $code] = [$res->body['user']['id'], $res->body['link']['code']];
+        $this->call('PATCH', "/admin/users/$id", ['password' => 'getypt123'], $admin['token']);
+        $this->assertNull(PasswordLinks::find($this->pdo(), $code));
+    }
+
+    public function test_own_password_change_invalidates_open_links(): void
+    {
+        $admin = $this->admin();
+        $kees = $this->makeUser('kees');
+        $code = $this->call('POST', "/admin/users/{$kees['id']}/password-link", null, $admin['token'])->body['link']['code'];
+        $this->call('POST', '/me/password', ['current_password' => 'geheim123', 'new_password' => 'nieuwwacht'], $kees['token']);
+        $this->assertNull(PasswordLinks::find($this->pdo(), $code));
+    }
+
+    public function test_redeem_revokes_tokens_when_user_already_has_password(): void
+    {
+        [$id, $code] = $this->invited();
+        // Password set by a path that does not touch links (e.g. older data); the invite is still open.
+        $this->pdo()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+            ->execute([password_hash('geheim123', PASSWORD_DEFAULT), $id]);
+        $old = Auth::issueToken($this->pdo(), $id, 'oud');
+        $this->assertSame(200, $this->redeem($code)->status);
+        $this->assertSame(401, $this->call('GET', '/me', null, $old)->status);
+    }
+
+    public function test_code_in_path_is_not_accepted(): void
+    {
+        [, $code] = $this->invited();
+        $this->assertSame(404, $this->call('GET', "/password-links/$code")->status);
+    }
+
+    public function test_lookup_without_code_is_link_invalid(): void
+    {
+        $res = $this->call('POST', '/password-links/lookup', []);
+        $this->assertSame(404, $res->status);
+        $this->assertSame('link_invalid', $res->body['error']);
     }
 
     public function test_password_link_unknown_user_404(): void

@@ -164,6 +164,7 @@ final class AdminHandlers
             }
             $sets[] = 'password_hash = ?';
             $args[] = password_hash($b['password'], PASSWORD_DEFAULT);
+            PasswordLinks::invalidateFor($pdo, $id); // open invite/reset links must not outlive a typed password
         }
         if (array_key_exists('disabled', $b)) {
             if (!is_bool($b['disabled'])) {

@@ -21,9 +21,9 @@ describe('password link endpoints', () => {
     fetchMock.mockResolvedValue(json(200, { token: 't', user: { id: 1, username: 'kees', is_admin: false } }))
     const r = await redeemLink('abc', 'geheim123')
     const [url, init] = fetchMock.mock.calls[0]
-    expect(url).toBe('/api/password-links/abc')
+    expect(url).toBe('/api/password-links/redeem')
     expect(init.method).toBe('POST')
-    expect(JSON.parse(init.body)).toEqual({ password: 'geheim123', device_name: 'Browser' })
+    expect(JSON.parse(init.body)).toEqual({ code: 'abc', password: 'geheim123', device_name: 'Browser' })
     expect(r.token).toBe('t')
   })
 
@@ -42,6 +42,15 @@ describe('password link endpoints', () => {
     fetchMock.mockResolvedValue(json(401, { error: 'unauthorized', message: 'x' }))
     await expect(linkInfo('abc')).rejects.toMatchObject({ status: 401 })
     expect(onUnauthorized).not.toHaveBeenCalled()
+  })
+
+  it('linkInfo sends the code in the body, never in the path', async () => {
+    fetchMock.mockResolvedValue(json(200, { username: 'kees', purpose: 'invite', expires_at: 'x' }))
+    await linkInfo('geheimecode')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/password-links/lookup')
+    expect(url).not.toContain('geheimecode')
+    expect(JSON.parse(init.body)).toEqual({ code: 'geheimecode' })
   })
 
   it('changePassword posts both passwords to /me/password', async () => {

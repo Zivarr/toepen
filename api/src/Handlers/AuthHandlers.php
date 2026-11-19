@@ -60,10 +60,16 @@ final class AuthHandlers
         return $password;
     }
 
-    /** GET /password-links/{code} (no login) */
+    private static function codeFrom(Request $req): string
+    {
+        $code = ($req->json ?? [])['code'] ?? '';
+        return is_string($code) ? $code : '';
+    }
+
+    /** POST /password-links/lookup {code} (no login) */
     public static function linkInfo(Request $req, Ctx $ctx, array $params): Response
     {
-        $link = PasswordLinks::find($ctx->pdo, (string)$params['code']) ?? throw self::linkInvalid();
+        $link = PasswordLinks::find($ctx->pdo, self::codeFrom($req)) ?? throw self::linkInvalid();
         return new Response(200, [
             'username' => $link['username'],
             'purpose' => $link['purpose'],
@@ -71,11 +77,11 @@ final class AuthHandlers
         ]);
     }
 
-    /** POST /password-links/{code} (no login): sets the password and logs the user in. */
+    /** POST /password-links/redeem {code, password, device_name} (no login): sets the password and logs the user in. */
     public static function redeemLink(Request $req, Ctx $ctx, array $params): Response
     {
         $body = $req->json ?? [];
-        $link = PasswordLinks::find($ctx->pdo, (string)$params['code']) ?? throw self::linkInvalid();
+        $link = PasswordLinks::find($ctx->pdo, self::codeFrom($req)) ?? throw self::linkInvalid();
         $password = self::requireNewPassword($body['password'] ?? null); // checked before the link is spent
         $device = trim((string)($body['device_name'] ?? ''));
         $pdo = $ctx->pdo;
@@ -85,16 +91,22 @@ final class AuthHandlers
             if (!PasswordLinks::markUsed($pdo, $link['link_id'])) {
                 throw self::linkInvalid();
             }
+            $st = $pdo->prepare('SELECT password_hash IS NOT NULL FROM users WHERE id = ? FOR UPDATE');
+            $st->execute([$link['user_id']]);
+            $hadPassword = (bool)$st->fetchColumn();
             $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
                 ->execute([password_hash($password, PASSWORD_DEFAULT), $link['user_id']]);
-            if ($link['purpose'] === 'reset') {
+            // Revoke sessions for a reset, and also for an invite if a password was already set in the meantime.
+            if ($link['purpose'] === 'reset' || $hadPassword) {
                 $pdo->prepare('UPDATE auth_tokens SET revoked_at = UTC_TIMESTAMP() WHERE user_id = ? AND revoked_at IS NULL')
                     ->execute([$link['user_id']]);
             }
             $token = Auth::issueToken($pdo, $link['user_id'], $device);
             $pdo->commit();
         } catch (Throwable $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             throw $e;
         }
 
@@ -122,6 +134,7 @@ final class AuthHandlers
         $new = self::requireNewPassword($body['new_password'] ?? null);
         $ctx->pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
             ->execute([password_hash($new, PASSWORD_DEFAULT), $ctx->user['id']]);
+        PasswordLinks::invalidateFor($ctx->pdo, $ctx->user['id']);
         return new Response(204);
     }
 }

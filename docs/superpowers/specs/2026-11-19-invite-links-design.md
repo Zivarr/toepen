@@ -55,12 +55,12 @@ With a password typed in, behaviour is as today (no link).
 |---|---|---|---|---|
 | `POST /admin/users` | admin | `{username, password?, is_admin}` | 201 `{user, link?: {code, expires_at}}`; `link` present when `password` omitted | 409 `username_taken`, 422 |
 | `POST /admin/users/{id}/password-link` | admin | – | 201 `{link: {code, purpose, expires_at}}` (purpose `invite` if the user has no password, else `reset`) | 404 |
-| `GET /password-links/{code}` | none | – | 200 `{username, purpose, expires_at}` | 404 `link_invalid` (unknown, used, expired or user disabled) |
-| `POST /password-links/{code}` | none | `{password, device_name}` | 200 `{token, user}` (logged in) | 404 `link_invalid`, 422 (password < 8) |
+| `POST /password-links/lookup` | none | `{code}` | 200 `{username, purpose, expires_at}` | 404 `link_invalid` (unknown, used, expired or user disabled) |
+| `POST /password-links/redeem` | none | `{code, password, device_name}` | 200 `{token, user}` (logged in) | 404 `link_invalid`, 422 (password < 8) |
 | `POST /me/password` | user | `{current_password, new_password}` | 204 | 403 `wrong_password`, 429 `too_many_attempts`, 422 |
 | `GET /admin/users` | admin | – | rows gain `invite_pending: bool` | – |
 
-The link code is only returned at creation; the server stores just its hash. The code is part of the URL fragment (`#/welkom/<code>`), so it never appears in the web server's access log.
+The link code is only returned at creation; the server stores just its hash. The code is part of the URL fragment (`#/welkom/<code>`) and the PWA sends it to the API only in request bodies, so it never appears in the web server's access log. Setting a password any other way (admin types one, own password change) spends the user's open links, and redeeming a link revokes the user's sessions whenever they already had a password.
 
 ## 6. PWA changes
 
