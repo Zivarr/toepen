@@ -4,24 +4,34 @@ import { flushOutbox } from './outbox'
 import { refresh } from './refresh'
 
 let cycle: Promise<void> | null = null
+let rerun = false
 let started = false
 
-/** One full sync pass (single-flight). Never throws; skipped when logged out. */
-export function runSyncCycle(): Promise<void> {
-  if (!cycle) {
-    cycle = (async () => {
-      try {
-        if (!(await getToken())) return
-        await checkSyncRequests()
-        await flushOutbox()
-        await refresh()
-      } catch (e) {
-        console.warn('Sync mislukt', e)
-      }
-    })().finally(() => {
-      cycle = null
-    })
+async function onePass(): Promise<void> {
+  try {
+    if (!(await getToken())) return
+    await checkSyncRequests()
+    await flushOutbox()
+    await refresh()
+  } catch (e) {
+    console.warn('Sync mislukt', e)
   }
+}
+
+/** One full sync pass (single-flight; a call during a run adds one more pass). Never throws. */
+export function runSyncCycle(): Promise<void> {
+  if (cycle) {
+    rerun = true
+    return cycle
+  }
+  cycle = (async () => {
+    do {
+      rerun = false
+      await onePass()
+    } while (rerun)
+  })().finally(() => {
+    cycle = null
+  })
   return cycle
 }
 

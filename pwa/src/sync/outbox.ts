@@ -10,6 +10,7 @@ export interface FlushResult {
 }
 
 let running: Promise<FlushResult> | null = null
+let rerun = false
 
 export async function outboxCounts(): Promise<{ pending: number; failed: number }> {
   const [pending, failed] = await Promise.all([
@@ -57,8 +58,9 @@ async function run(): Promise<FlushResult> {
     const items = await db.outbox.where('status').equals('pending').toArray()
     for (const item of items) {
       try {
-        await uploadGame(item.upload) // 201 and duplicate (200) both count as success
+        const res = await uploadGame(item.upload) // 201 and duplicate (200) both count as success
         await db.outbox.delete(item.id)
+        if (res.duplicate) await db.kv.delete('etag') // force a full refresh so the cache is rebuilt
         sent++
       } catch (e) {
         if (isTransient(e)) break
@@ -74,13 +76,30 @@ async function run(): Promise<FlushResult> {
   return { sent, failed: c.failed, pending: c.pending }
 }
 
-/** Uploads queued games. Single-flight: concurrent callers share one run. */
+/** Runs passes until no call arrived during the last one (never two passes at once). */
+async function runAll(): Promise<FlushResult> {
+  let sent = 0
+  let last: FlushResult
+  do {
+    rerun = false
+    last = await run()
+    sent += last.sent
+  } while (rerun)
+  return { ...last, sent }
+}
+
+/**
+ * Uploads queued games. Single-flight: concurrent callers share one run; a call made
+ * during a run makes it do one more pass, so items queued meanwhile are sent too.
+ */
 export function flushOutbox(): Promise<FlushResult> {
-  if (!running) {
-    running = run().finally(() => {
-      running = null
-    })
+  if (running) {
+    rerun = true
+    return running
   }
+  running = runAll().finally(() => {
+    running = null
+  })
   return running
 }
 

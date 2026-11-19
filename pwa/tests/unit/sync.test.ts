@@ -154,6 +154,41 @@ describe('flushOutbox', () => {
   })
 })
 
+describe('flush edge cases', () => {
+  it('item added while a flush is in progress is sent by the same returned promise', async () => {
+    await queue('g1')
+    let release!: () => void
+    const gate = new Promise<void>((r) => { release = r })
+    m.uploadGame.mockImplementation(async (g) => {
+      if (g.id === 'g1') await gate
+      return ok(g.id)
+    })
+    const first = flushOutbox()
+    await vi.waitFor(() => expect(m.uploadGame).toHaveBeenCalledTimes(1))
+    await queue('g2')
+    const second = flushOutbox()
+    release()
+    expect(await second).toMatchObject({ sent: 2, pending: 0 })
+    expect(await first).toMatchObject({ sent: 2, pending: 0 })
+    expect(m.uploadGame).toHaveBeenCalledTimes(2)
+    expect(await db.outbox.count()).toBe(0)
+  })
+
+  it('duplicate of a soft-deleted game is dropped from the cache after the next refresh', async () => {
+    await seedServerGroup()
+    await db.kv.put({ key: 'etag', value: '"e1"' })
+    await queue('gone')
+    m.uploadGame.mockResolvedValue(ok('gone', true))
+    m.fetchGroups.mockImplementation(async (etag?: string) =>
+      etag
+        ? { notModified: true as const }
+        : { notModified: false as const, groups: [srvGroup()], etag: '"e2"' })
+    await flushOutbox()
+    expect(await refresh()).toBe('updated')
+    expect((await getGames('server:5')).map((g) => g.id)).toEqual(['srv-1'])
+  })
+})
+
 describe('refresh', () => {
   it('refresh keeps outbox games in the cached group', async () => {
     await seedServerGroup()
