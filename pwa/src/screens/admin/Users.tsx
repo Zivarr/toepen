@@ -1,9 +1,10 @@
 import { useState } from 'preact/hooks'
-import { admin, type AdminUser } from '../../api/endpoints'
+import { admin, type AdminUser, type PasswordLink } from '../../api/endpoints'
 import { Button } from '../../components/Button'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { Dialog } from '../../components/Dialog'
 import { toast } from '../../components/Toast'
+import { ShareLinkDialog } from '../../components/ShareLinkDialog'
 import { AdminShell, attempt, formatDateTime, useAdminData } from './common'
 
 export function Users() {
@@ -11,6 +12,15 @@ export function Users() {
   const [creating, setCreating] = useState(false)
   const [resetFor, setResetFor] = useState<AdminUser | null>(null)
   const [revokeFor, setRevokeFor] = useState<AdminUser | null>(null)
+  const [shared, setShared] = useState<{ username: string; link: PasswordLink } | null>(null)
+
+  async function newLink(u: AdminUser) {
+    let link: PasswordLink | null = null
+    if (await attempt(async () => (link = await admin.passwordLink(u.id)))) {
+      setShared({ username: u.username, link: link! })
+      void reload()
+    }
+  }
 
   async function toggleDisabled(u: AdminUser) {
     if (await attempt(() => admin.updateUser(u.id, { disabled: !u.disabled }))) void reload()
@@ -30,8 +40,13 @@ export function Users() {
                 {u.is_admin && <span class="tag">Admin</span>} {u.disabled && <span class="tag tag-bad">Uitgeschakeld</span>}
               </span>
             </div>
-            <p class="muted">Laatst gebruikt: {formatDateTime(u.last_used_at)}</p>
+            <p class="muted">
+              {u.invite_pending ? 'Uitnodiging open' : `Laatst gebruikt: ${formatDateTime(u.last_used_at)}`}
+            </p>
             <div class="group-actions">
+              <Button variant="secondary" onClick={() => void newLink(u)}>
+                Nieuwe link
+              </Button>
               <Button variant="secondary" onClick={() => setResetFor(u)}>
                 Wachtwoord resetten
               </Button>
@@ -49,12 +64,14 @@ export function Users() {
       {creating && (
         <CreateUser
           onClose={() => setCreating(false)}
-          onDone={() => {
+          onDone={(created) => {
             setCreating(false)
+            if (created) setShared(created)
             void reload()
           }}
         />
       )}
+      {shared && <ShareLinkDialog username={shared.username} link={shared.link} onClose={() => setShared(null)} />}
       {resetFor && (
         <ResetPassword
           user={resetFor}
@@ -83,21 +100,29 @@ export function Users() {
   )
 }
 
-function CreateUser({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+function CreateUser({
+  onClose,
+  onDone,
+}: {
+  onClose: () => void
+  onDone: (created: { username: string; link: PasswordLink } | null) => void
+}) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
   const [busy, setBusy] = useState(false)
-  const valid = /^[A-Za-z0-9._-]{3,30}$/.test(username.trim()) && password.length >= 8
+  const valid = /^[A-Za-z0-9._-]{3,30}$/.test(username.trim()) && (password === '' || password.length >= 8)
 
   async function submit(e: Event) {
     e.preventDefault()
     setBusy(true)
-    const ok = await attempt(() => admin.createUser(username.trim(), password, isAdmin), {
+    let link: PasswordLink | undefined
+    const name = username.trim()
+    const ok = await attempt(async () => ({ link } = await admin.createUser(name, password, isAdmin)), {
       username_taken: 'Gebruikersnaam bestaat al',
     })
     setBusy(false)
-    if (ok) onDone()
+    if (ok) onDone(link ? { username: name, link } : null)
   }
 
   return (
@@ -112,7 +137,7 @@ function CreateUser({ onClose, onDone }: { onClose: () => void; onDone: () => vo
           Wachtwoord
           <input name="password" type="password" autocomplete="new-password" value={password} onInput={(e) => setPassword(e.currentTarget.value)} />
         </label>
-        <p class="muted">Minimaal 8 tekens</p>
+        <p class="muted">Leeg laten om een uitnodigingslink te maken (anders minimaal 8 tekens)</p>
         <label class="toggle">
           <input type="checkbox" name="is_admin" checked={isAdmin} onChange={(e) => setIsAdmin(e.currentTarget.checked)} />
           Beheerder

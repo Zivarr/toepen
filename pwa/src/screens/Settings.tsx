@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'preact/hooks'
 import { clearAuth, getSettings, getUser, setSettings } from '../storage/repo'
 import { db } from '../storage/db'
-import { logout } from '../api/endpoints'
+import { changePassword, logout } from '../api/endpoints'
+import { ApiError, NetworkError } from '../api/client'
+import { toast } from '../components/Toast'
 import { notifySync, requeueFailed } from '../sync/outbox'
 import { runSyncCycle } from '../sync/triggers'
 import { navigate } from '../router'
@@ -157,6 +159,7 @@ export function Settings() {
           Uitloggen
         </Button>
       </div>
+      <ChangePassword />
       <p class="muted">Versie {__APP_VERSION__}</p>
 
       {confirmLogout && (
@@ -170,5 +173,68 @@ export function Settings() {
         />
       )}
     </main>
+  )
+}
+
+function changePasswordError(e: unknown): string {
+  if (e instanceof NetworkError) return 'Geen verbinding met de server'
+  if (e instanceof ApiError && e.code === 'wrong_password') return 'Huidig wachtwoord klopt niet'
+  if (e instanceof ApiError && e.code === 'too_many_attempts') return 'Te vaak geprobeerd. Probeer het over 15 minuten opnieuw.'
+  if (e instanceof ApiError) return e.message
+  return 'Wijzigen is mislukt'
+}
+
+function ChangePassword() {
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+  const [repeat, setRepeat] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function submit(e: Event) {
+    e.preventDefault()
+    if (next.length < 8) return setError('Minimaal 8 tekens')
+    if (next !== repeat) return setError('Wachtwoorden komen niet overeen')
+    setBusy(true)
+    setError('')
+    try {
+      await changePassword(current, next)
+      setCurrent('')
+      setNext('')
+      setRepeat('')
+      toast('Wachtwoord gewijzigd')
+    } catch (err) {
+      setError(changePasswordError(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <h2>Wachtwoord wijzigen</h2>
+      <form class="card" onSubmit={(e) => void submit(e)}>
+        <label>
+          Huidig wachtwoord
+          <input type="password" autocomplete="current-password" value={current} onInput={(e) => setCurrent(e.currentTarget.value)} required />
+        </label>
+        <label>
+          Nieuw wachtwoord
+          <input type="password" autocomplete="new-password" value={next} onInput={(e) => setNext(e.currentTarget.value)} required />
+        </label>
+        <label>
+          Herhaal nieuw wachtwoord
+          <input type="password" autocomplete="new-password" value={repeat} onInput={(e) => setRepeat(e.currentTarget.value)} required />
+        </label>
+        {error && (
+          <p class="error" role="alert">
+            {error}
+          </p>
+        )}
+        <Button type="submit" disabled={busy}>
+          Wijzigen
+        </Button>
+      </form>
+    </>
   )
 }

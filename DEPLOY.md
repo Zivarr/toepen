@@ -37,8 +37,9 @@ Let op: een wachtwoord resetten (PATCH op de gebruiker) logt bestaande apparaten
 ## Updaten
 
 1. Bouw opnieuw met `node scripts/make-upload.mjs`.
-2. Upload de gewijzigde bestanden uit `upload/` (PWA) en `upload/api/` (API) naar de server, in de volgorde hierboven: `sw.js` en `index.html` als laatste. Sla `api/install.php` over (die heb je na de eerste installatie verwijderd en hoort er niet meer te staan). Overschrijf `api/config.php` niet; dat bestand zit niet in `upload/` en staat al op de server.
-3. Voer nieuwe `api/migrations/NNN_*.sql`-bestanden in phpMyAdmin uit, op volgorde van nummer, en alleen de bestanden die je nog niet eerder hebt uitgevoerd.
+2. **Eerst de database:** voer nieuwe `api/migrations/NNN_*.sql`-bestanden in phpMyAdmin uit, op volgorde van nummer, en alleen de bestanden die je nog niet eerder hebt uitgevoerd. De nieuwe code verwacht de nieuwe tabellen, dus dit gaat vóór het uploaden.
+   - Voer `api/migrations/002_password_links.sql` eenmalig uit (alleen bij de eerste update na deze versie; uitnodigingslinks en eigen wachtwoord).
+3. Upload daarna de gewijzigde bestanden uit `upload/` (PWA) en `upload/api/` (API) naar de server, in de volgorde hierboven: `sw.js` en `index.html` als laatste. Sla `api/install.php` over (die heb je na de eerste installatie verwijderd en hoort er niet meer te staan). Overschrijf `api/config.php` niet; dat bestand zit niet in `upload/` en staat al op de server.
 
 ## Lokaal ontwikkelen
 
