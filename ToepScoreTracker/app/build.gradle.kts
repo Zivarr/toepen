@@ -13,8 +13,8 @@ android {
         applicationId = "nl.twezeman.toepscoretracker"
         minSdk = 24
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,8 +33,16 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api\"")
+        }
         release {
+            buildConfigField("String", "API_BASE_URL", "\"https://toepen.t-wezeman.nl/api\"")
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
@@ -79,6 +87,7 @@ dependencies {
     implementation(libs.jetbrains.annotations)
 
     testImplementation(libs.junit)
+    testImplementation(libs.org.json)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -3,6 +3,7 @@ package com.example.toepscoretracker
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -16,6 +17,10 @@ import com.example.toepscoretracker.database.AppDatabase
 import com.example.toepscoretracker.repository.GameRepository
 import com.example.toepscoretracker.viewmodel.SettingsViewModel
 import com.example.toepscoretracker.viewmodel.SettingsViewModelFactory
+import com.example.toepscoretracker.upload.UploadResult
+import com.example.toepscoretracker.upload.uploadButtonLabel
+import com.example.toepscoretracker.upload.uploadSkippedText
+import com.example.toepscoretracker.upload.uploadStatusText
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -94,6 +99,8 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnBackup).setOnClickListener { startBackup(profile) }
         findViewById<Button>(R.id.btnRestore).setOnClickListener { startRestore(profile) }
 
+        setupUpload(profile, prefs)
+
         findViewById<Button>(R.id.btnDeleteShortGames).setOnClickListener {
             showConfirmDialog(
                 getString(R.string.delete_short_games),
@@ -116,6 +123,49 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btnBackFromSettings).setOnClickListener { finish() }
+    }
+
+    private fun setupUpload(profile: String, prefs: android.content.SharedPreferences) {
+        val btn = findViewById<Button>(R.id.btnUploadServer)
+        val tvStatus = findViewById<TextView>(R.id.tvUploadStatus)
+        val str: (Int, List<Any>) -> String = { id, args -> getString(id, *args.toTypedArray()) }
+
+        fun refreshLabel() {
+            val at = if (prefs.contains(KEY_UPLOADED_AT)) prefs.getLong(KEY_UPLOADED_AT, 0L) else null
+            btn.text = uploadButtonLabel(at, str)
+        }
+        refreshLabel()
+
+        fun startUpload(username: String, password: String) {
+            btn.isEnabled = false
+            tvStatus.visibility = View.VISIBLE
+            tvStatus.text = getString(R.string.upload_busy)
+            lifecycleScope.launch {
+                val result = viewModel.uploadToServer(profile, username, password)
+                if (result is UploadResult.Success) {
+                    prefs.edit().putLong(KEY_UPLOADED_AT, System.currentTimeMillis()).apply()
+                    refreshLabel()
+                }
+                val main = uploadStatusText(result, str)
+                tvStatus.text = uploadSkippedText(result, str)?.let { "$main\n$it" } ?: main
+                Toast.makeText(this@SettingsActivity, main, Toast.LENGTH_LONG).show()
+                btn.isEnabled = true
+            }
+        }
+
+        btn.setOnClickListener {
+            val view = layoutInflater.inflate(R.layout.dialog_server_login, null)
+            val etUser = view.findViewById<EditText>(R.id.etServerUsername)
+            val etPass = view.findViewById<EditText>(R.id.etServerPassword)
+            AlertDialog.Builder(this)
+                .setTitle(R.string.upload_login_title)
+                .setView(view)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    startUpload(etUser.text.toString().trim(), etPass.text.toString())
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
     }
 
     private fun startBackup(profile: String) {
@@ -151,5 +201,6 @@ class SettingsActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "SettingsActivity"
+        private const val KEY_UPLOADED_AT = "uploadedAt"
     }
 }

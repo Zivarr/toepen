@@ -70,4 +70,16 @@
     <string name="revanche">Revanche?</string>
     <string name="add_player">Speler toevoegen</string>
     <string name="remove_player">Verwijder speler</string>
+    <string name="upload_server">Uploaden naar server</string>
+    <string name="upload_server_again">Opnieuw uploaden (laatst: %s)</string>
+    <string name="upload_login_title">Inloggen op toepen.t-wezeman.nl</string>
+    <string name="username">Gebruikersnaam</string>
+    <string name="password">Wachtwoord</string>
+    <string name="upload_busy">Bezig met uploaden…</string>
+    <string name="upload_success">Verzoek verstuurd: %1$d spellen. De beheerder moet het nog goedkeuren.</string>
+    <string name="upload_skipped">%d spellen overgeslagen (onvolledige gegevens)</string>
+    <string name="upload_wrong_credentials">Gebruikersnaam of wachtwoord klopt niet</string>
+    <string name="upload_too_many">Te vaak geprobeerd. Probeer het over 15 minuten opnieuw.</string>
+    <string name="upload_no_games">Er zijn geen spellen om te uploaden</string>
+    <string name="upload_failed">Uploaden mislukt: %s</string>
 </resources>

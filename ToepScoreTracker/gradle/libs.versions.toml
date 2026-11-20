@@ -14,6 +14,7 @@ room = "2.8.4"
 coroutines = "1.7.3"
 annotations = "23.0.0"
 konfetti = "2.0.4"
+orgjson = "20240303"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +35,7 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version = "1.7.2" }
 konfetti = { group = "nl.dionsegijn", name = "konfetti-xml", version.ref = "konfetti" }
+org-json = { group = "org.json", name = "json", version.ref = "orgjson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

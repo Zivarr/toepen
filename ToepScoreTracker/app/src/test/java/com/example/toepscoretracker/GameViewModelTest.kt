@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -112,7 +114,7 @@ class GameViewModelTest {
     }
 
     @Test
-    fun `undo emits UndoEmpty event when history is empty`() = runTest {
+    fun `undo emits UndoEmpty event when history is empty`() = runTestSeparateClock {
         var receivedEvent: GameEvent? = null
         val job = launch(testDispatcher) {
             viewModel.events.collect { receivedEvent = it }
@@ -132,7 +134,7 @@ class GameViewModelTest {
     }
 
     @Test
-    fun `game is saved to repository when game over`() = runTest {
+    fun `game is saved to repository when game over`() = runTestSeparateClock {
         repeat(5) { viewModel.applyPenalty("Alice") }
         repeat(5) { viewModel.applyPenalty("Bob") }
         // Let coroutines run
@@ -141,7 +143,7 @@ class GameViewModelTest {
     }
 
     @Test
-    fun `endGame saves game with empty winner`() = runTest {
+    fun `endGame saves game with empty winner`() = runTestSeparateClock {
         viewModel.endGame()
         assertTrue(insertedGames.isNotEmpty())
         assertEquals("", insertedGames.last().winnerName)
@@ -157,9 +159,16 @@ class GameViewModelTest {
     }
 
     @Test
-    fun `game is not saved twice on game over`() = runTest {
+    fun `game is not saved twice on game over`() = runTestSeparateClock {
         repeat(5) { viewModel.applyPenalty("Alice") }
         repeat(5) { viewModel.applyPenalty("Bob") }
         assertEquals(1, insertedGames.size)
     }
+
+    /**
+     * runTest on its own virtual clock. The ViewModel's live timer runs on Main (testDispatcher); sharing one
+     * scheduler made runTest's final "advance until idle" step the 1-second timer forever, so tests never ended.
+     */
+    private fun runTestSeparateClock(body: suspend TestScope.() -> Unit) =
+        runTest(UnconfinedTestDispatcher(TestCoroutineScheduler()), testBody = body)
 }

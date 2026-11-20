@@ -1,0 +1,96 @@
+:root {
+  --primary: #1b5e20;
+  --primary-dark: #003300;
+  --accent: #2e7d32;
+  --remove: #ef5350;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--primary);
+  color: #fff;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.screen {
+  padding: 16px max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+h1 { margin: 0 0 16px; font-size: 1.6rem; }
+h2 { margin: 0 0 12px; font-size: 1.2rem; }
+a { color: #c8e6c9; }
+.muted { opacity: 0.75; }
+.stack { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.list { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.card { background: var(--primary-dark); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+label { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; font-size: 0.95rem; }
+input { font: inherit; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); background: #fff; color: #111; }
+.btn { display: inline-block; min-height: 48px; padding: 12px 18px; border: 0; border-radius: 10px; font: inherit; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer; color: #fff; }
+.btn:disabled { opacity: 0.5; }
+.btn-primary { background: var(--accent); }
+.btn-secondary { background: var(--primary-dark); border: 1px solid var(--accent); }
+.btn-danger { background: var(--remove); }
+.btn-ghost { background: transparent; min-height: 40px; padding: 8px 10px; color: #c8e6c9; }
+.error { color: #ffcdd2; background: rgba(239, 83, 80, 0.25); padding: 8px 10px; border-radius: 8px; }
+.app-header { display: flex; align-items: center; gap: 12px; padding: max(10px, env(safe-area-inset-top)) 16px 10px; background: var(--primary-dark); }
+.app-title { font-weight: 700; color: #fff; text-decoration: none; }
+.spacer { flex: 1; }
+.header-link { font-size: 0.9rem; }
+.badge { background: #ffb300; color: #222; border-radius: 999px; padding: 3px 10px; font-size: 0.8rem; font-weight: 600; }
+.update-banner { display: block; width: 100%; padding: 12px 16px; border: 0; background: #2e7d32; color: #fff; font: inherit; font-weight: 700; text-align: center; cursor: pointer; }
+.resume-banner { display: block; padding: 12px 16px; background: #ffb300; color: #222; font-weight: 700; text-align: center; text-decoration: none; }
+.group-link { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #fff; text-decoration: none; min-height: 44px; }
+.group-name { font-weight: 600; font-size: 1.1rem; }
+.tag { font-size: 0.8rem; background: var(--accent); border-radius: 999px; padding: 2px 10px; }
+.tag-bad { background: var(--remove); }
+.group-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.toggle { flex-direction: row; align-items: center; margin: 0; gap: 8px; }
+.toggle input { width: 22px; height: 22px; }
+.dialog-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+.dialog { background: var(--primary-dark); border-radius: 14px; padding: 18px; width: 100%; max-width: 420px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.toast { position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); background: #222; color: #fff; padding: 12px 16px; border-radius: 10px; text-align: center; z-index: 20; }
+.login { max-width: 420px; margin: 0 auto; padding-top: max(16px, env(safe-area-inset-top)); }
+
+.back { text-decoration: none; }
+.wide { width: 100%; }
+.add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.add-row input { flex: 1; min-width: 0; }
+.player-pick { width: 100%; display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--accent); background: var(--primary-dark); color: #fff; font: inherit; cursor: pointer; }
+.player-pick.picked { background: var(--accent); font-weight: 700; }
+.seat { background: #fff; color: var(--primary); border-radius: 999px; min-width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.selected-list { padding-left: 0; list-style-position: inside; }
+.selected-row { display: flex; justify-content: space-between; align-items: center; background: var(--primary-dark); border-radius: 10px; padding: 6px 6px 6px 14px; }
+.remove-btn { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--remove); color: #fff; font-size: 1rem; cursor: pointer; }
+.game-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.timer { font-variant-numeric: tabular-nums; font-size: 1.3rem; font-weight: 700; }
+.player-row.out { opacity: 0.4; }
+.player-info { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.player-name { font-weight: 700; font-size: 1.15rem; flex: 1; }
+.tally { letter-spacing: 1px; }
+.score { font-size: 1.3rem; font-weight: 700; min-width: 1.5em; text-align: right; }
+.player-actions { display: flex; gap: 6px; }
+.player-actions .btn { flex: 1; padding: 10px 6px; font-size: 0.9rem; }
+.winner { font-size: 1.5rem; font-weight: 700; }
+.score-line { display: flex; justify-content: space-between; margin-bottom: 0; }
+.plain { list-style: none; padding: 0; margin: 0 0 8px; }
+.result-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.winner-line { font-weight: 700; margin: 4px 0; }
+.tag-warn { background: #ffb300; color: #222; }
+.highlight { outline: 3px solid #ffb300; }
+.table-wrap { overflow-x: auto; margin-bottom: 16px; }
+.lb { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.lb th, .lb td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--accent); white-space: nowrap; }
+.lb th:first-child, .lb td:first-child { text-align: left; }
+
+.admin-nav { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; }
+.admin-nav a { text-decoration: none; padding: 4px 0; }
+.admin-nav a.active { color: #fff; font-weight: 700; border-bottom: 2px solid #fff; }
+.select { font: inherit; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); background: #fff; color: #111; width: 100%; }

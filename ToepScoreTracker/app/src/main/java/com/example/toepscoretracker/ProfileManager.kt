@@ -1,6 +1,7 @@
 package com.example.toepscoretracker
 
 import android.content.Context
+import android.content.SharedPreferences
 
 object ProfileManager {
     private const val PREFS_NAME = "ToepenProfiles"
@@ -35,16 +36,7 @@ object ProfileManager {
 
         val oldPrefs = context.getSharedPreferences("ToepenSettings_$oldName", Context.MODE_PRIVATE)
         val newPrefs = context.getSharedPreferences("ToepenSettings_$newName", Context.MODE_PRIVATE)
-        newPrefs.edit().apply {
-            oldPrefs.all.forEach { (k, v) ->
-                when (v) {
-                    is Int -> putInt(k, v)
-                    is Boolean -> putBoolean(k, v)
-                    is String -> putString(k, v)
-                    else -> Unit
-                }
-            }
-        }.apply()
+        newPrefs.edit().also { copyPrefs(oldPrefs.all, it) }.apply()
         oldPrefs.edit().clear().apply()
         context.deleteSharedPreferences("ToepenSettings_$oldName")
 
@@ -74,5 +66,20 @@ object ProfileManager {
             .edit()
             .putString(KEY_PROFILES, profiles.joinToString("|"))
             .apply()
+    }
+}
+
+/** Copies every supported preference value into [editor]; caller applies. */
+internal fun copyPrefs(all: Map<String, *>, editor: SharedPreferences.Editor) {
+    all.forEach { (k, v) ->
+        when (v) {
+            is Int -> editor.putInt(k, v)
+            is Boolean -> editor.putBoolean(k, v)
+            is String -> editor.putString(k, v)
+            is Long -> editor.putLong(k, v)
+            is Float -> editor.putFloat(k, v)
+            is Set<*> -> editor.putStringSet(k, v.filterIsInstance<String>().toSet())
+            else -> Unit
+        }
     }
 }
