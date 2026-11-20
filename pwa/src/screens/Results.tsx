@@ -5,7 +5,7 @@ import { deleteGame } from '../api/endpoints'
 import { ApiError, NetworkError } from '../api/client'
 import { runSyncCycle } from '../sync/triggers'
 import { notifySync } from '../sync/outbox'
-import { formatDuration } from '../util/format'
+import { formatDuration, scoreLabel } from '../util/format'
 import { Button } from '../components/Button'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { toast } from '../components/Toast'
@@ -130,7 +130,7 @@ export function Results({ groupKey }: { groupKey: string }) {
                 {g.players.map((p) => (
                   <li key={p.name} class="score-line">
                     <span>{p.name}</span>
-                    <span>{p.final_score}</span>
+                    <span>{scoreLabel(p)}</span>
                   </li>
                 ))}
               </ul>
