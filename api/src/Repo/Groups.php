@@ -27,14 +27,29 @@ final class Groups
         return $group;
     }
 
+    /** Creates the group with its creator as member, atomically (joins an outer transaction when there is one). */
     public static function create(PDO $pdo, string $name, int $createdBy, int $maxPenaltyPoints): int
     {
-        $pdo->prepare('INSERT INTO game_groups (name, created_by, max_penalty_points) VALUES (?, ?, ?)')
-            ->execute([$name, $createdBy, $maxPenaltyPoints]);
-        $id = (int)$pdo->lastInsertId();
-        $pdo->prepare('INSERT INTO group_members (group_id, user_id, added_by) VALUES (?, ?, ?)')
-            ->execute([$id, $createdBy, $createdBy]);
-        return $id;
+        $own = !$pdo->inTransaction();
+        if ($own) {
+            $pdo->beginTransaction();
+        }
+        try {
+            $pdo->prepare('INSERT INTO game_groups (name, created_by, max_penalty_points) VALUES (?, ?, ?)')
+                ->execute([$name, $createdBy, $maxPenaltyPoints]);
+            $id = (int)$pdo->lastInsertId();
+            $pdo->prepare('INSERT INTO group_members (group_id, user_id, added_by) VALUES (?, ?, ?)')
+                ->execute([$id, $createdBy, $createdBy]);
+            if ($own) {
+                $pdo->commit();
+            }
+            return $id;
+        } catch (Throwable $e) {
+            if ($own && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     /** Case-insensitive lookup following merge chains; creates the player when absent. */
@@ -199,16 +214,23 @@ final class Groups
             $pdo->beginTransaction();
         }
         try {
+            // Plain INSERT: only a duplicate UUID (MySQL error 1062; the primary key is the only unique key on
+            // games) means "already stored". Every other error is thrown, never mistaken for a duplicate.
+            // A failed statement is undone on its own, so an outer transaction stays usable.
             $ins = $pdo->prepare(
-                'INSERT IGNORE INTO games (id, group_id, recorded_by, started_at, received_at, duration_ms,
-                                           max_penalty_points, ended_early)
+                'INSERT INTO games (id, group_id, recorded_by, started_at, received_at, duration_ms,
+                                    max_penalty_points, ended_early)
                  VALUES (?, ?, ?, ?, UTC_TIMESTAMP(), ?, ?, ?)'
             );
-            $ins->execute([
-                $game['id'], $groupId, $recordedBy, $game['started_at'], $game['duration_ms'],
-                $game['max_penalty_points'], $game['ended_early'] ? 1 : 0,
-            ]);
-            if ($ins->rowCount() === 0) {
+            try {
+                $ins->execute([
+                    $game['id'], $groupId, $recordedBy, $game['started_at'], $game['duration_ms'],
+                    $game['max_penalty_points'], $game['ended_early'] ? 1 : 0,
+                ]);
+            } catch (PDOException $e) {
+                if ((int)($e->errorInfo[1] ?? 0) !== 1062) {
+                    throw $e;
+                }
                 if ($own) {
                     $pdo->rollBack();
                 }
