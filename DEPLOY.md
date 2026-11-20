@@ -26,7 +26,7 @@ Let op: een wachtwoord resetten (PATCH op de gebruiker) logt bestaande apparaten
 ## PWA-bestanden
 
 - Upload alles in `upload/` naar de document root van het subdomein. `api/config.php` zit er niet in en blijft op de server staan.
-- **Volgorde:** upload eerst al het andere (`assets/`, `icons/`, `workbox-<hash>.js`, het manifest) en als allerlaatste `sw.js` en `index.html`. Anders verwijzen die naar bestanden die nog niet op de server staan.
+- **Volgorde:** upload eerst al het andere (`assets/`, `img/`, `workbox-<hash>.js`, het manifest) en als allerlaatste `sw.js` en `index.html`. Anders verwijzen die naar bestanden die nog niet op de server staan.
 - `workbox-<hash>.js` staat in de root naast `sw.js` en is nodig: `sw.js` laadt dat bestand. Upload het dus altijd mee (de naam verandert per build).
 - `sw.js` en `index.html` moeten bij elke release overschreven worden, anders krijgen gebruikers de nieuwe versie niet.
 - De gehashte bestanden in `assets/` mogen zich ophopen. Verwijder oude bestanden pas na een paar dagen, want apparaten met een oudere versie hebben ze mogelijk nog nodig.

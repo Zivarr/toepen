@@ -22,7 +22,7 @@ export default defineConfig({
     preact(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['icons/apple-touch-icon.png'],
+      includeAssets: ['img/apple-touch-icon.png'],
       manifest: {
         name: 'Toepen',
         short_name: 'Toepen',
@@ -33,9 +33,9 @@ export default defineConfig({
         theme_color: '#1B5E20',
         background_color: '#1B5E20',
         icons: [
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/img/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/img/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/img/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
