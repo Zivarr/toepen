@@ -74,7 +74,35 @@ input { font: inherit; padding: 12px; border-radius: 8px; border: 1px solid var(
 .player-row.out { opacity: 0.4; }
 .player-info { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
 .player-name { font-weight: 700; font-size: 1.15rem; flex: 1; }
-.tally { letter-spacing: 1px; }
+/* Tally marks are drawn in CSS (not font glyphs) so every mark has the same height and bottom line. */
+.tally { display: inline-flex; align-items: flex-end; gap: 0.5em; height: 1.1em; }
+.tally-group { position: relative; display: inline-flex; align-items: flex-end; gap: 0.2em; height: 100%; }
+.tally-mark { display: block; width: 0.09em; height: 100%; background: currentColor; border-radius: 0.05em; }
+/* Group of five: four strokes with a bar through them. */
+.tally-five::after {
+  content: '';
+  position: absolute;
+  left: -0.15em;
+  right: -0.15em;
+  top: 55%;
+  height: 0.09em;
+  background: currentColor;
+  border-radius: 0.05em;
+}
+/* P: a normal stroke with a bowl on its upper half. */
+.tally-p { position: relative; margin-right: 0.4em; }
+.tally-p::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0.42em;
+  height: 0.5em;
+  border: 0.09em solid currentColor;
+  border-left: none;
+  border-radius: 0 0.3em 0.3em 0;
+  box-sizing: border-box;
+}
 .score { font-size: 1.3rem; font-weight: 700; min-width: 1.5em; text-align: right; }
 .player-actions { display: flex; gap: 6px; }
 .player-actions .btn { flex: 1; padding: 10px 6px; font-size: 0.9rem; }

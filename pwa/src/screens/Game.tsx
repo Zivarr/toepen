@@ -128,7 +128,7 @@ export function Game() {
             <li key={name} class={`card player-row ${out ? 'out' : ''}`} data-player={name}>
               <div class="player-info">
                 <span class="player-name">{name}</span>
-                <span class="tally">{tally(score)}</span>
+                <Tally text={tally(score, state.maxPenaltyPoints)} score={score} />
                 <span class="score">{score}</span>
               </div>
               <div class="player-actions">
@@ -184,5 +184,24 @@ export function Game() {
         />
       )}
     </main>
+  )
+}
+
+/**
+ * Renders a tally string ("卌 |||P") with every mark drawn in CSS instead of font glyphs,
+ * so strokes, groups of five and the P all share one height and one bottom line on every device.
+ */
+function Tally({ text, score }: { text: string; score: number }) {
+  if (text === '0') return <span class="tally">0</span>
+  return (
+    <span class="tally" role="img" aria-label={`${score} strafpunten`}>
+      {text.split(' ').map((group, g) => (
+        <span key={g} class={`tally-group ${group === '卌' ? 'tally-five' : ''}`}>
+          {[...(group === '卌' ? '||||' : group)].map((ch, i) => (
+            <span key={i} class={ch === 'P' ? 'tally-mark tally-p' : 'tally-mark'} />
+          ))}
+        </span>
+      ))}
+    </span>
   )
 }
