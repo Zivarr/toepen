@@ -132,6 +132,14 @@ describe('engine', () => {
     s = run(s, pen('B'), pen('B')).s
     expect(s.anita).toBe('B')
   })
+  it('knockout on a pre-update state without anita still records the anita', () => {
+    const old = mk(['A', 'B', 'C'], 2) as unknown as Record<string, unknown>
+    delete old.anita
+    const { s, events } = run(old as unknown as GameState, pen('A'), pen('A'))
+    expect(s.anita).toBe('A')
+    expect(events).toEqual([{ type: 'eliminated', name: 'A', anita: true }])
+    expect(run(s, { type: 'undo' }).s.anita).toBeNull()
+  })
   it('endEarly before any knockout leaves anita null', () => {
     expect(run(mk(), { type: 'endEarly' }).s.anita).toBeNull()
   })

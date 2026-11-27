@@ -85,13 +85,15 @@ export function apply(s: GameState, a: Action, now: number): { state: GameState;
         boer[a.name] = (boer[a.name] ?? 0) + 1
       }
       const knockedOut = score >= max
-      const firstOut = knockedOut && s.anita === null
+      // a game persisted before the Anita existed has no anita field: treat as null
+      const anita = s.anita ?? null
+      const firstOut = knockedOut && anita === null
       const next: GameState = {
         ...s,
         scores: { ...s.scores, [a.name]: score },
         boer,
-        anita: firstOut ? a.name : s.anita,
-        history: [...s.history, { scores: s.scores, boer: s.boer, anita: s.anita }],
+        anita: firstOut ? a.name : anita,
+        history: [...s.history, { scores: s.scores, boer: s.boer, anita }],
       }
       const events: GameEvent[] = []
       if (knockedOut) events.push({ type: 'eliminated', name: a.name, anita: firstOut })
