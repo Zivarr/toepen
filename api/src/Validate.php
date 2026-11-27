@@ -13,7 +13,7 @@ final class Validate
      * Validates and normalises a GameUpload.
      *
      * @return array{id:string, group_id:?int, started_at:string, duration_ms:int, max_penalty_points:int,
-     *               ended_early:bool, winner:?string, players:array<int,array{name:string,final_score:int,boer_count:int}>}
+     *               ended_early:bool, winner:?string, players:array<int,array{name:string,final_score:int,boer_count:int,is_anita:bool}>}
      *         started_at is returned as a UTC "Y-m-d H:i:s" string, ready for the database.
      */
     public static function gameUpload(array $g, bool $requireGroupId = true): array

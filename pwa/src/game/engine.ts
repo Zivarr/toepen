@@ -51,6 +51,15 @@ export function isEliminated(s: GameState, name: string): boolean {
   return (s.scores[name] ?? 0) >= s.maxPenaltyPoints
 }
 
+// A game persisted before the Anita existed has no anita field. Derive it from
+// who is already out: none -> null, one -> that player, more -> '' (unknown,
+// never equals a name and is not null, so nobody becomes the Anita).
+function currentAnita(s: GameState): string | null {
+  if (s.anita !== undefined) return s.anita
+  const out = s.players.filter((p) => isEliminated(s, p))
+  return out.length === 0 ? null : out.length === 1 ? out[0] : ''
+}
+
 export function apply(s: GameState, a: Action, now: number): { state: GameState; events: GameEvent[] } {
   const ignore = { state: s, events: [] as GameEvent[] }
   if (s.isOver) return ignore
@@ -85,8 +94,7 @@ export function apply(s: GameState, a: Action, now: number): { state: GameState;
         boer[a.name] = (boer[a.name] ?? 0) + 1
       }
       const knockedOut = score >= max
-      // a game persisted before the Anita existed has no anita field: treat as null
-      const anita = s.anita ?? null
+      const anita = currentAnita(s)
       const firstOut = knockedOut && anita === null
       const next: GameState = {
         ...s,
