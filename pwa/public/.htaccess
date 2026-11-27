@@ -1,0 +1,7 @@
+# Browsers must always check with the server before using a cached index.html,
+# so they never load an old page that points to deleted build files.
+<IfModule mod_headers.c>
+  <Files "index.html">
+    Header set Cache-Control "no-cache"
+  </Files>
+</IfModule>
