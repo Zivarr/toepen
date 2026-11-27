@@ -172,7 +172,7 @@ final class Groups
         }
 
         $st = $pdo->prepare(
-            'SELECT gp.game_id, p.name, gp.final_score, gp.boer_count
+            'SELECT gp.game_id, p.name, gp.final_score, gp.boer_count, gp.is_anita
              FROM game_players gp
              JOIN players p ON p.id = gp.player_id
              JOIN games g ON g.id = gp.game_id
@@ -186,6 +186,7 @@ final class Groups
                 'name' => $r['name'],
                 'final_score' => (int)$r['final_score'],
                 'boer_count' => (int)$r['boer_count'],
+                'is_anita' => (bool)$r['is_anita'],
             ];
         }
 
@@ -239,7 +240,7 @@ final class Groups
 
             $ids = [];
             $addPlayer = $pdo->prepare(
-                'INSERT INTO game_players (game_id, player_id, seat, final_score, boer_count) VALUES (?, ?, ?, ?, ?)'
+                'INSERT INTO game_players (game_id, player_id, seat, final_score, boer_count, is_anita) VALUES (?, ?, ?, ?, ?, ?)'
             );
             foreach ($game['players'] as $seat => $p) {
                 $pid = self::resolvePlayer($pdo, $groupId, $p['name']);
@@ -247,7 +248,7 @@ final class Groups
                     throw new ApiError(422, 'validation_failed', 'Ongeldig spel: twee spelers verwijzen naar dezelfde speler.');
                 }
                 $ids[$pid] = true;
-                $addPlayer->execute([$game['id'], $pid, $seat, $p['final_score'], $p['boer_count']]);
+                $addPlayer->execute([$game['id'], $pid, $seat, $p['final_score'], $p['boer_count'], (int)($p['is_anita'] ?? false)]);
                 if ($game['winner'] !== null && Names::normalise($game['winner']) === Names::normalise($p['name'])) {
                     $winnerId = $pid;
                 }

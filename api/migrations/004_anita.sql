@@ -1,0 +1,1 @@
+ALTER TABLE game_players ADD COLUMN is_anita TINYINT(1) NOT NULL DEFAULT 0 AFTER boer_count;

@@ -59,6 +59,7 @@ final class Validate
 
         $players = [];
         $seen = [];
+        $anitas = 0;
         foreach ($rawPlayers as $p) {
             if (!is_array($p) || !is_string($p['name'] ?? null)) {
                 self::fail('ongeldige speler');
@@ -82,7 +83,19 @@ final class Validate
             if (!is_int($boer) || $boer < 0) {
                 self::fail('ongeldig aantal boeren');
             }
-            $players[] = ['name' => $name, 'final_score' => $score, 'boer_count' => $boer];
+            $anita = $p['is_anita'] ?? false;
+            if (!is_bool($anita)) {
+                self::fail('ongeldige anita');
+            }
+            if ($anita) {
+                if (++$anitas > 1) {
+                    self::fail('maar één anita per spel');
+                }
+                if ($score !== $max) {
+                    self::fail('anita moet het maximum hebben');
+                }
+            }
+            $players[] = ['name' => $name, 'final_score' => $score, 'boer_count' => $boer, 'is_anita' => $anita];
         }
 
         $winner = $g['winner'] ?? null;
