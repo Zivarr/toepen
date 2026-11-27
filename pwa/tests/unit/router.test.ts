@@ -21,6 +21,7 @@ describe('parseRoute', () => {
     expect(parseRoute('#/game').name).toBe('game')
     expect(parseRoute('#/g/local:abc/results').name).toBe('results')
     expect(parseRoute('#/g/local:abc/stats').name).toBe('leaderboard')
+    expect(parseRoute('#/g/abc/seasons')).toEqual({ name: 'seasons', params: { key: 'abc' } })
     expect(parseRoute('#/settings').name).toBe('settings')
     expect(parseRoute('#/admin/users').name).toBe('adminUsers')
     expect(parseRoute('#/admin/groups').name).toBe('adminGroups')

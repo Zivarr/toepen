@@ -138,7 +138,7 @@ final class Groups
             'max_penalty_points' => (int)$g['max_penalty_points'],
             'players' => $players,
             'games' => self::gamesFor($pdo, $groupId),
-        ];
+        ] + Seasons::state($pdo, $groupId);
     }
 
     /** Non-deleted games of a group, newest first, in the Game shape. */
@@ -172,7 +172,7 @@ final class Groups
         }
 
         $st = $pdo->prepare(
-            'SELECT gp.game_id, p.name, gp.final_score, gp.boer_count, gp.is_anita
+            'SELECT gp.game_id, p.name, gp.final_score, gp.boer_count, gp.is_anita, gp.fold_count
              FROM game_players gp
              JOIN players p ON p.id = gp.player_id
              JOIN games g ON g.id = gp.game_id
@@ -187,6 +187,7 @@ final class Groups
                 'final_score' => (int)$r['final_score'],
                 'boer_count' => (int)$r['boer_count'],
                 'is_anita' => (bool)$r['is_anita'],
+                'fold_count' => (int)$r['fold_count'],
             ];
         }
 
@@ -240,7 +241,7 @@ final class Groups
 
             $ids = [];
             $addPlayer = $pdo->prepare(
-                'INSERT INTO game_players (game_id, player_id, seat, final_score, boer_count, is_anita) VALUES (?, ?, ?, ?, ?, ?)'
+                'INSERT INTO game_players (game_id, player_id, seat, final_score, boer_count, is_anita, fold_count) VALUES (?, ?, ?, ?, ?, ?, ?)'
             );
             foreach ($game['players'] as $seat => $p) {
                 $pid = self::resolvePlayer($pdo, $groupId, $p['name']);
@@ -248,7 +249,7 @@ final class Groups
                     throw new ApiError(422, 'validation_failed', 'Ongeldig spel: twee spelers verwijzen naar dezelfde speler.');
                 }
                 $ids[$pid] = true;
-                $addPlayer->execute([$game['id'], $pid, $seat, $p['final_score'], $p['boer_count'], (int)($p['is_anita'] ?? false)]);
+                $addPlayer->execute([$game['id'], $pid, $seat, $p['final_score'], $p['boer_count'], (int)($p['is_anita'] ?? false), (int)($p['fold_count'] ?? 0)]);
                 if ($game['winner'] !== null && Names::normalise($game['winner']) === Names::normalise($p['name'])) {
                     $winnerId = $pid;
                 }

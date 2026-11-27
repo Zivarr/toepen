@@ -7,7 +7,10 @@ import type { CachedGroup, GroupKey, StoredGame } from '../types'
 
 /** Replaces server groups and games with server data, keeping unsent local work. */
 export async function refresh(): Promise<'updated' | 'unchanged' | 'offline'> {
-  const stored = (await db.kv.get('etag'))?.value as string | undefined
+  let stored = (await db.kv.get('etag'))?.value as string | undefined
+  // A cache written before seasons existed may hold the new ETag without season data; refetch fully.
+  const cached = await db.groups.where('kind').equals('server').toArray()
+  if (cached.some((g) => g.seasons === undefined)) stored = undefined
   let result
   try {
     result = await fetchGroups(stored)
@@ -48,6 +51,8 @@ export async function refresh(): Promise<'updated' | 'unchanged' | 'offline'> {
         maxPenaltyPoints: sg.max_penalty_points,
         playerNames: [...serverNames, ...stillPending],
         pendingPlayers: stillPending,
+        seasons: sg.seasons,
+        firstSeasonName: sg.first_season_name,
       }
       await db.groups.put(group)
       await db.games.where('groupKey').equals(key).delete()

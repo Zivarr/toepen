@@ -1,15 +1,18 @@
 import { useState } from 'preact/hooks'
-import { admin, type AdminGroup } from '../../api/endpoints'
+import { admin, type AdminGroup, type SeasonState } from '../../api/endpoints'
 import { Button } from '../../components/Button'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { Dialog } from '../../components/Dialog'
 import { toast } from '../../components/Toast'
+import { seasonsOf, type Season } from '../../stats/seasons'
 import { runSyncCycle } from '../../sync/triggers'
+import { formatDay, isoToLocalInput, localInputToIso } from '../../util/format'
 import { AdminShell, attempt, groupPlayers, useAdminData, type SimplePlayer } from './common'
 
 type Action =
   | { kind: 'merge'; group: AdminGroup }
   | { kind: 'players'; group: AdminGroup }
+  | { kind: 'seasons'; group: AdminGroup }
   | { kind: 'delete'; group: AdminGroup; shortOnly: boolean }
 
 export function AdminGroups() {
@@ -94,6 +97,9 @@ export function AdminGroups() {
                 <Button variant="secondary" onClick={() => setAction({ kind: 'players', group: g })}>
                   Spelers samenvoegen
                 </Button>
+                <Button variant="secondary" onClick={() => setAction({ kind: 'seasons', group: g })}>
+                  Seizoenen
+                </Button>
                 <Button variant="danger" onClick={() => setAction({ kind: 'delete', group: g, shortOnly: false })}>
                   Alle spellen verwijderen
                 </Button>
@@ -110,6 +116,16 @@ export function AdminGroups() {
         <MergeGroup source={action.group} others={data.groups.filter((g) => g.id !== action.group.id)} onClose={() => setAction(null)} onDone={() => void done('Groepen samengevoegd')} />
       )}
       {action?.kind === 'players' && <MergePlayers group={action.group} onClose={() => setAction(null)} onDone={() => void done('Spelers samengevoegd')} />}
+      {action?.kind === 'seasons' && (
+        <SeasonsDialog
+          group={action.group}
+          onClose={() => setAction(null)}
+          onChanged={() => {
+            void runSyncCycle()
+            void reload()
+          }}
+        />
+      )}
       {action?.kind === 'delete' && (
         <ConfirmDialog
           title={action.shortOnly ? 'Korte spellen verwijderen' : 'Alle spellen verwijderen'}
@@ -232,6 +248,132 @@ function MergePlayers({ group, onClose, onDone }: { group: AdminGroup; onClose: 
         <Button disabled={!source || !target || source.id === target.id} onClick={() => setConfirm(true)}>
           Verder
         </Button>
+      </div>
+    </Dialog>
+  )
+}
+
+type SeasonEdit = { kind: 'rename' | 'date' | 'delete'; season: Season } | { kind: 'new' }
+
+function SeasonsDialog({ group, onClose, onChanged }: { group: AdminGroup; onClose: () => void; onChanged: () => void }) {
+  const [state, setState] = useState<SeasonState>({ first_season_name: group.first_season_name, seasons: group.seasons })
+  const [edit, setEdit] = useState<SeasonEdit | null>(null)
+  const [text, setText] = useState('')
+  const seasons = seasonsOf({ seasons: state.seasons, firstSeasonName: state.first_season_name })
+  const last = seasons[seasons.length - 1]
+
+  function open(e: SeasonEdit) {
+    setText(e.kind === 'rename' ? (e.season.id === null ? state.first_season_name : state.seasons.find((x) => x.id === e.season.id)?.name) ?? '' : e.kind === 'date' && e.season.start !== null ? isoToLocalInput(new Date(e.season.start).toISOString()) : '')
+    setEdit(e)
+  }
+
+  async function run(call: () => Promise<SeasonState>) {
+    let next: SeasonState | null = null
+    if (await attempt(async () => void (next = await call()))) {
+      setState(next!)
+      setEdit(null)
+      onChanged()
+    }
+  }
+
+  if (edit?.kind === 'delete') {
+    const s = edit.season
+    return (
+      <ConfirmDialog
+        title="Seizoen verwijderen"
+        message={`${s.label} wordt verwijderd. De spellen blijven bestaan en horen dan bij het vorige seizoen.`}
+        confirmLabel="Verwijderen"
+        danger
+        onCancel={() => setEdit(null)}
+        onConfirm={() => void run(() => admin.deleteSeason(s.id!))}
+      />
+    )
+  }
+  if (edit?.kind === 'new') {
+    return (
+      <ConfirmDialog
+        title="Nieuw seizoen starten"
+        message={`${last.label} afsluiten en seizoen ${last.number + 1} starten?`}
+        confirmLabel="Starten"
+        onCancel={() => setEdit(null)}
+        onConfirm={() => void run(() => admin.startSeason(group.id, text.trim() ? { name: text.trim() } : {}))}
+      >
+        <label>
+          Naam (optioneel)
+          <input maxLength={40} value={text} onInput={(e) => setText(e.currentTarget.value)} />
+        </label>
+      </ConfirmDialog>
+    )
+  }
+  if (edit) {
+    const s = edit.season
+    const isDate = edit.kind === 'date'
+    return (
+      <Dialog title={`${s.label}: ${isDate ? 'Startdatum wijzigen' : 'Hernoemen'}`} onClose={() => setEdit(null)}>
+        <label>
+          {isDate ? 'Startdatum' : 'Naam (leeg is standaard)'}
+          {isDate ? (
+            <input type="datetime-local" value={text} onInput={(e) => setText(e.currentTarget.value)} />
+          ) : (
+            <input maxLength={40} value={text} onInput={(e) => setText(e.currentTarget.value)} />
+          )}
+        </label>
+        <div class="dialog-actions">
+          <Button variant="ghost" onClick={() => setEdit(null)}>
+            Annuleren
+          </Button>
+          <Button
+            disabled={isDate && !text}
+            onClick={() =>
+              void run(() =>
+                isDate
+                  ? admin.updateSeason(s.id!, { starts_at: localInputToIso(text) })
+                  : s.id === null
+                    ? admin.renameFirstSeason(group.id, text.trim())
+                    : admin.updateSeason(s.id, { name: text.trim() }),
+              )
+            }
+          >
+            Opslaan
+          </Button>
+        </div>
+      </Dialog>
+    )
+  }
+
+  return (
+    <Dialog title={`Seizoenen van ${group.name}`} onClose={onClose}>
+      <ul class="plain" data-testid="admin-seasons">
+        {seasons.map((s) => (
+          <li key={s.number} class="card">
+            <div class="result-head">
+              <span class="group-name">{s.label}</span>
+              {s === last && <span class="tag">loopt nog</span>}
+            </div>
+            {s.start !== null && <p class="muted">{formatDay(s.start)}</p>}
+            <div class="group-actions">
+              <Button variant="secondary" onClick={() => open({ kind: 'rename', season: s })}>
+                Hernoemen
+              </Button>
+              {s.id !== null && (
+                <>
+                  <Button variant="secondary" onClick={() => open({ kind: 'date', season: s })}>
+                    Startdatum wijzigen
+                  </Button>
+                  <Button variant="danger" onClick={() => open({ kind: 'delete', season: s })}>
+                    Verwijderen
+                  </Button>
+                </>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div class="dialog-actions">
+        <Button variant="ghost" onClick={onClose}>
+          Sluiten
+        </Button>
+        <Button onClick={() => open({ kind: 'new' })}>Nieuw seizoen starten</Button>
       </div>
     </Dialog>
   )

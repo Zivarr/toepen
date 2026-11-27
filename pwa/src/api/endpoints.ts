@@ -1,5 +1,5 @@
 import { request } from './client'
-import type { Game, GameUpload, Group, Player, SyncRequest, User } from '../types'
+import type { ApiSeason, Game, GameUpload, Group, Player, SyncRequest, User } from '../types'
 
 export function deviceName(ua: string = navigator.userAgent): string {
   if (/iPhone|iPad|iPod/.test(ua)) return 'iPhone'
@@ -10,7 +10,16 @@ export function deviceName(ua: string = navigator.userAgent): string {
 export type AdminUser = User & { disabled: boolean; last_used_at: string | null; invite_pending: boolean }
 export interface LinkInfo { username: string; purpose: 'invite' | 'reset'; expires_at: string }
 export interface PasswordLink { code: string; purpose: 'invite' | 'reset'; expires_at: string }
-export type AdminGroup = { id: number; name: string; creator: string; members: User[]; game_count: number }
+export type SeasonState = { first_season_name: string | null; seasons: ApiSeason[] }
+export type AdminGroup = {
+  id: number
+  name: string
+  creator: string
+  members: User[]
+  game_count: number
+  first_season_name: string | null
+  seasons: ApiSeason[]
+}
 export type AdminSyncRequest = SyncRequest & { requested_by: string; game_count: number; player_names: string[] }
 export type MatchEntry = {
   name: string
@@ -131,6 +140,20 @@ export const admin = {
       target_group_id: targetGroupId,
     })
     return r.data!.group
+  },
+  /** Without starts_at the season starts now. */
+  async startSeason(groupId: number, body: { name?: string | null; starts_at?: string }): Promise<SeasonState> {
+    return (await request<SeasonState>('POST', `/admin/groups/${groupId}/seasons`, body)).data!
+  },
+  async updateSeason(id: number, body: { name?: string | null; starts_at?: string }): Promise<SeasonState> {
+    return (await request<SeasonState>('PATCH', `/admin/seasons/${id}`, body)).data!
+  },
+  async deleteSeason(id: number): Promise<SeasonState> {
+    return (await request<SeasonState>('DELETE', `/admin/seasons/${id}`)).data!
+  },
+  /** Season 1 has no row; an empty name resets it to the default. */
+  async renameFirstSeason(groupId: number, name: string | null): Promise<SeasonState> {
+    return (await request<SeasonState>('PATCH', `/admin/groups/${groupId}/first-season`, { name })).data!
   },
   async mergePlayers(sourcePlayerId: number, targetPlayerId: number): Promise<void> {
     await request('POST', '/admin/players/merge', {

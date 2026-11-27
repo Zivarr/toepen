@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { leaderboard, timeStats, playerOrder } from '../../src/stats/stats'
+import { leaderboard, timeStats, playerOrder, rankRows } from '../../src/stats/stats'
+import type { PlayerStats } from '../../src/stats/stats'
 import type { Game } from '../../src/types'
 
 const MIN = 60000
@@ -8,7 +9,7 @@ function game(winner: string | null, players: [string, number, number][], dur: n
   return {
     id: `g${n++}`, group_id: 1, recorded_by: 'x', started_at: '2026-11-18T20:00:00+01:00',
     duration_ms: dur, max_penalty_points: 10, ended_early: early, winner,
-    players: players.map(([name, s, b]) => ({ name, final_score: s, boer_count: b, is_anita: false })),
+    players: players.map(([name, s, b]) => ({ name, final_score: s, boer_count: b, fold_count: 0, is_anita: false })),
   }
 }
 
@@ -52,11 +53,30 @@ describe('leaderboard anita', () => {
   })
 })
 
+describe('leaderboard folds', () => {
+  const withFolds = (g: Game, folds: Record<string, number>): Game => ({
+    ...g, players: g.players.map((p) => ({ ...p, fold_count: folds[p.name] ?? 0 })),
+  })
+  it('counts folds per player', () => {
+    const lb = leaderboard([
+      withFolds(game('Ravi', [['Ravi', 3, 0], ['Kees', 10, 0]], MIN), { Ravi: 2, Kees: 1 }),
+      withFolds(game('Kees', [['Ravi', 10, 0], ['Kees', 4, 0]], MIN), { Ravi: 3 }),
+    ])
+    expect(lb.find((p) => p.name === 'Ravi')!.folds).toBe(5)
+    expect(lb.find((p) => p.name === 'Kees')!.folds).toBe(1)
+  })
+  it('missing fold_count counts as zero', () => {
+    const old = game('Ravi', [['Ravi', 3, 0], ['Kees', 10, 0]], MIN)
+    old.players = old.players.map(({ fold_count: _omit, ...rest }) => rest) as unknown as Game['players']
+    expect(leaderboard([old]).map((p) => p.folds)).toEqual([0, 0])
+  })
+})
+
 describe('leaderboard', () => {
   const lb = leaderboard(games)
   it('counts wins, played, boer, winRate (case-insensitive names)', () => {
     expect(lb.find((p) => p.name === 'Ravi')).toEqual({
-      name: 'Ravi', wins: 2, played: 4, winRate: 0.5, boer: 1, anita: 0, avgDurationMs: 20 * MIN, totalDurationMs: 61 * MIN,
+      name: 'Ravi', wins: 2, played: 4, winRate: 0.5, boer: 1, anita: 0, folds: 0, avgDurationMs: 20 * MIN, totalDurationMs: 61 * MIN,
     })
     const kees = lb.find((p) => p.name === 'Kees')!
     expect(kees).toMatchObject({ wins: 1, played: 4, boer: 3, winRate: 0.25 })
@@ -122,5 +142,41 @@ describe('playerOrder', () => {
       game('A', [['A', 1, 0], ['B', 2, 0]], MIN), game('C', [['C', 1, 0], ['D', 2, 0]], MIN),
     ]
     expect(playerOrder(['C', 'A'], g)).toEqual(['A', 'C'])
+  })
+})
+
+describe('rankRows', () => {
+  const row = (name: string, o: Partial<PlayerStats> = {}): PlayerStats => ({
+    name, wins: 0, played: 0, winRate: 0, boer: 0, anita: 0, folds: 0, avgDurationMs: null, totalDurationMs: 0, ...o,
+  })
+
+  it('sorts by the chosen stat desc then wins then name', () => {
+    const rows = [
+      row('Zed', { boer: 2, wins: 1 }),
+      row('Anna', { boer: 2, wins: 1 }),
+      row('Kees', { boer: 2, wins: 5 }),
+      row('Tim', { boer: 9 }),
+    ]
+    expect(rankRows(rows, 'boer').map((r) => r.name)).toEqual(['Tim', 'Kees', 'Anna', 'Zed'])
+    expect(rows[0].name).toBe('Zed')
+  })
+
+  it('rankRows wins ties are broken by win rate then name', () => {
+    const rows = [
+      row('A', { wins: 2, played: 4, winRate: 0.5 }),
+      row('B', { wins: 2, played: 3, winRate: 2 / 3 }),
+      row('Aa', { wins: 2, played: 3, winRate: 2 / 3 }),
+    ]
+    expect(rankRows(rows, 'wins').map((r) => r.name)).toEqual(['Aa', 'B', 'A'])
+  })
+
+  it('winRate has no minimum games', () => {
+    const rows = [row('Big', { wins: 9, played: 10, winRate: 0.9 }), row('One', { wins: 1, played: 1, winRate: 1 })]
+    expect(rankRows(rows, 'winRate').map((r) => r.name)).toEqual(['One', 'Big'])
+  })
+
+  it('duration puts null last', () => {
+    const rows = [row('None'), row('Short', { avgDurationMs: 1000 }), row('Long', { avgDurationMs: 5000 })]
+    expect(rankRows(rows, 'duration').map((r) => r.name)).toEqual(['Long', 'Short', 'None'])
   })
 })

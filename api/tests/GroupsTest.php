@@ -59,6 +59,12 @@ final class GroupsTest extends TestCase
         $this->game($g, $tim['id'], [$bram, $anna], '2026-01-03 10:00:00');
         $this->game($g, $tim['id'], [$cas, $bram, $anna], '2026-01-04 10:00:00', null, true);
         $api = Groups::toApi($this->pdo(), $g);
+        $this->assertSame(
+            ['id', 'name', 'creator', 'max_penalty_points', 'players', 'games', 'first_season_name', 'seasons'],
+            array_keys($api)
+        );
+        $this->assertNull($api['first_season_name']);
+        $this->assertSame([], $api['seasons']);
         $this->assertSame('Werk', $api['name']);
         $this->assertSame('tim', $api['creator']);
         $this->assertSame(12, $api['max_penalty_points']);
@@ -69,7 +75,7 @@ final class GroupsTest extends TestCase
         $this->assertNull($api['games'][0]['winner']);
         $this->assertSame('Anna', $api['games'][1]['winner']);
         $this->assertSame('tim', $api['games'][0]['recorded_by']);
-        $this->assertSame(['name' => 'Cas', 'final_score' => 3, 'boer_count' => 1, 'is_anita' => false], $api['games'][2]['players'][0]);
+        $this->assertSame(['name' => 'Cas', 'final_score' => 3, 'boer_count' => 1, 'is_anita' => false, 'fold_count' => 0], $api['games'][2]['players'][0]);
         $this->assertFalse($api['games'][0]['ended_early']);
     }
 

@@ -1,6 +1,6 @@
 import type { GameUpload } from '../types'
 
-type Snapshot = { scores: Record<string, number>; boer: Record<string, number>; anita: string | null }
+type Snapshot = { scores: Record<string, number>; boer: Record<string, number>; folds: Record<string, number>; anita: string | null }
 
 export interface GameState {
   players: string[]
@@ -8,6 +8,7 @@ export interface GameState {
   startedAt: number
   scores: Record<string, number>
   boer: Record<string, number>
+  folds: Record<string, number>
   roundPoints: number
   history: Snapshot[]
   isOver: boolean
@@ -37,6 +38,7 @@ export function newGame(players: string[], maxPenaltyPoints: number, now: number
     startedAt: now,
     scores: zero(),
     boer: zero(),
+    folds: zero(),
     roundPoints: 1,
     history: [],
     isOver: false,
@@ -87,8 +89,14 @@ export function apply(s: GameState, a: Action, now: number): { state: GameState;
       const max = s.maxPenaltyPoints
       let score = cur
       const boer = { ...s.boer }
+      // States saved before fold counting have no folds field.
+      const prevFolds = s.folds ?? {}
+      const folds = { ...prevFolds }
       if (a.type === 'penalty') score = Math.min(max, cur + s.roundPoints)
-      else if (a.type === 'fold') score = Math.min(max, cur + s.roundPoints - 1)
+      else if (a.type === 'fold') {
+        score = Math.min(max, cur + s.roundPoints - 1)
+        folds[a.name] = (folds[a.name] ?? 0) + 1
+      }
       else {
         score = Math.max(0, cur - 1)
         boer[a.name] = (boer[a.name] ?? 0) + 1
@@ -100,8 +108,9 @@ export function apply(s: GameState, a: Action, now: number): { state: GameState;
         ...s,
         scores: { ...s.scores, [a.name]: score },
         boer,
+        folds,
         anita: firstOut ? a.name : anita,
-        history: [...s.history, { scores: s.scores, boer: s.boer, anita }],
+        history: [...s.history, { scores: s.scores, boer: s.boer, folds: prevFolds, anita }],
       }
       const events: GameEvent[] = []
       if (knockedOut) events.push({ type: 'eliminated', name: a.name, anita: firstOut })
@@ -142,6 +151,7 @@ export function toUpload(s: GameState, id: string, groupId: number): GameUpload 
       name,
       final_score: s.scores[name],
       boer_count: s.boer[name] ?? 0,
+      fold_count: s.folds?.[name] ?? 0,
       is_anita: s.anita === name,
     })),
   }

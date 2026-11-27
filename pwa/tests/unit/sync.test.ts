@@ -26,7 +26,7 @@ function upload(id: string, groupId = 5): GameUpload {
   return {
     id, group_id: groupId, started_at: '2026-11-18T21:00:00+01:00', duration_ms: 120000,
     max_penalty_points: 10, ended_early: false, winner: 'Anna',
-    players: [{ name: 'Anna', final_score: 3, boer_count: 0, is_anita: false }, { name: 'Bob', final_score: 10, boer_count: 1, is_anita: false }],
+    players: [{ name: 'Anna', final_score: 3, boer_count: 0, fold_count: 0, is_anita: false }, { name: 'Bob', final_score: 10, boer_count: 1, fold_count: 0, is_anita: false }],
   }
 }
 const serverGroup: CachedGroup = {
@@ -46,7 +46,8 @@ function srvGroup(over: Partial<Group> = {}): Group {
   return {
     id: 5, name: 'Werk', creator: 'tim', max_penalty_points: 10,
     players: [{ id: 1, name: 'Anna', games_played: 1 }, { id: 2, name: 'Bob', games_played: 1 }],
-    games: [{ ...upload('srv-1'), group_id: 5, recorded_by: 'kees' }], ...over,
+    games: [{ ...upload('srv-1'), group_id: 5, recorded_by: 'kees' }],
+    first_season_name: null, seasons: [], ...over,
   }
 }
 
@@ -214,13 +215,32 @@ describe('refresh', () => {
     expect(g?.maxPenaltyPoints).toBe(10)
   })
 
+  it('refresh stores seasons and the first season name on the cached group', async () => {
+    const seasons = [{ id: 7, name: 'Winter', starts_at: '2027-01-01T00:00:00+01:00' }]
+    m.fetchGroups.mockResolvedValue({
+      notModified: false, groups: [srvGroup({ seasons, first_season_name: 'Begin' })], etag: 'e',
+    })
+    await refresh()
+    const g = await getGroup('server:5')
+    expect(g?.seasons).toEqual(seasons)
+    expect(g?.firstSeasonName).toBe('Begin')
+  })
+
   it('refresh with 304 changes nothing', async () => {
-    await seedServerGroup()
+    await seedServerGroup({ seasons: [] })
     await db.kv.put({ key: 'etag', value: '"e1"' })
     m.fetchGroups.mockResolvedValue({ notModified: true })
     expect(await refresh()).toBe('unchanged')
     expect(m.fetchGroups).toHaveBeenCalledWith('"e1"')
-    expect(await getGroups()).toEqual([serverGroup])
+    expect(await getGroups()).toEqual([{ ...serverGroup, seasons: [] }])
+  })
+
+  it('refresh ignores the stored etag when a cached server group lacks seasons', async () => {
+    await seedServerGroup()
+    await db.kv.put({ key: 'etag', value: '"e1"' })
+    m.fetchGroups.mockResolvedValue({ notModified: false, groups: [srvGroup()], etag: '"e2"' })
+    expect(await refresh()).toBe('updated')
+    expect(m.fetchGroups).toHaveBeenCalledWith(undefined)
   })
 
   it('refresh returns offline on network error', async () => {

@@ -1,20 +1,25 @@
 import { useEffect, useState } from 'preact/hooks'
-import { getGroup, setLocalMaxPenalty } from '../storage/repo'
+import { getGames, getGroup, setLocalMaxPenalty } from '../storage/repo'
 import { db } from '../storage/db'
 import { patchGroup } from '../api/endpoints'
 import { ApiError, NetworkError } from '../api/client'
-import type { CachedGroup, GroupKey } from '../types'
+import type { CachedGroup, GroupKey, StoredGame } from '../types'
+import { gamesIn, groupPageView, pastSeasons, seasonsOf, seasonStartMs } from '../stats/seasons'
+import { formatDay } from '../util/format'
+import { SeasonTitles } from '../components/SeasonTitles'
 import { Button } from '../components/Button'
 import { toast } from '../components/Toast'
 
 export function GroupHome({ groupKey }: { groupKey: string }) {
   const key = groupKey as GroupKey
   const [group, setGroup] = useState<CachedGroup | null | undefined>(undefined)
+  const [games, setGames] = useState<StoredGame[]>([])
   const [max, setMax] = useState('')
 
   useEffect(() => {
     const load = () =>
-      void getGroup(key).then((g) => {
+      void Promise.all([getGroup(key), getGames(key)]).then(([g, gs]) => {
+        setGames(gs)
         setGroup(g ?? null)
         if (g) setMax((m) => m || String(g.maxPenaltyPoints))
       })
@@ -53,6 +58,19 @@ export function GroupHome({ groupKey }: { groupKey: string }) {
     }
   }
 
+  const seasons = seasonsOf(group)
+  const view = groupPageView(seasons, games)
+  const hasPast = pastSeasons(seasons, games).length > 0
+  const startOf = (s: (typeof seasons)[number]) => seasonStartMs(s, gamesIn(s, games))
+  const sinceText = (s: (typeof seasons)[number]) => {
+    const start = startOf(s)
+    return start === null ? undefined : `loopt sinds ${formatDay(start)}`
+  }
+  const rangeText = (s: (typeof seasons)[number]) => {
+    const start = startOf(s)
+    return start === null || s.end === null ? undefined : `${formatDay(start)} – ${formatDay(s.end)}`
+  }
+
   return (
     <main class="screen">
       <p>
@@ -61,6 +79,25 @@ export function GroupHome({ groupKey }: { groupKey: string }) {
         </a>
       </p>
       <h1>{group.name}</h1>
+      {view.kind === 'justEnded' ? (
+        <>
+          <SeasonTitles
+            season={view.ended}
+            titles={view.titles}
+            state="ended"
+            confetti
+            dates={rangeText(view.ended)}
+          />
+          <p class="muted">{view.running.label} · loopt sinds {formatDay(view.running.start as number)}</p>
+        </>
+      ) : (
+        <SeasonTitles season={view.running} titles={view.titles} state="running" confetti={false} dates={sinceText(view.running)} />
+      )}
+      {hasPast && (
+        <p>
+          <a href={`#/g/${key}/seasons`}>Vorige seizoenen ›</a>
+        </p>
+      )}
       <div class="stack">
         <a class="btn btn-primary" href={`#/g/${key}/setup`}>
           Nieuw spel

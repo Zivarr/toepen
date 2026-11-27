@@ -31,6 +31,7 @@ export function parseRoute(hash: string): Route {
     if (n === 2) return { name: 'group', params: { key: b } }
     if (n === 3 && c === 'setup') return { name: 'setup', params: { key: b } }
     if (n === 3 && c === 'results') return { name: 'results', params: { key: b } }
+    if (n === 3 && c === 'seasons') return { name: 'seasons', params: { key: b } }
     if (n === 3 && c === 'stats') return { name: 'leaderboard', params: { key: b } }
   }
   if (a === 'admin') {
