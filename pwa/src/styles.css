@@ -133,3 +133,17 @@ input { font: inherit; padding: 12px; border-radius: 8px; border: 1px solid var(
 .admin-nav a { text-decoration: none; padding: 4px 0; }
 .admin-nav a.active { color: #fff; font-weight: 700; border-bottom: 2px solid #fff; }
 .select { font: inherit; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); background: #fff; color: #111; width: 100%; }
+
+.season-titles { margin: 8px 0 12px; }
+.st-head { font-size: 0.8rem; }
+.st-pill { display: inline-block; font-size: 0.65rem; background: #fff; color: var(--primary); border-radius: 999px; padding: 1px 8px; margin-left: 6px; font-weight: 700; }
+.st-banner { position: relative; overflow: hidden; background: linear-gradient(135deg, #f9d976, #c99a1b); color: #3b2a00; border-radius: 16px; padding: 14px; text-align: center; margin: 6px 0 8px; }
+.st-inner { position: relative; z-index: 1; }
+.st-crown { font-size: 36px; }
+.st-label { font-size: 0.7rem; letter-spacing: 0.08em; }
+.st-winner { font-size: 1.4rem; font-weight: 800; overflow-wrap: anywhere; }
+.st-count { font-size: 0.8rem; }
+.st-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--primary-dark); border-radius: 10px; padding: 8px 10px; margin-bottom: 6px; }
+.cf { position: absolute; top: -12px; width: 6px; height: 9px; border-radius: 2px; z-index: 0; animation: cf-fall linear 1 both; }
+@keyframes cf-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(170px) rotate(540deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cf { display: none; } }
