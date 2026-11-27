@@ -13,7 +13,7 @@ final class Validate
      * Validates and normalises a GameUpload.
      *
      * @return array{id:string, group_id:?int, started_at:string, duration_ms:int, max_penalty_points:int,
-     *               ended_early:bool, winner:?string, players:array<int,array{name:string,final_score:int,boer_count:int,is_anita:bool}>}
+     *               ended_early:bool, winner:?string, players:array<int,array{name:string,final_score:int,boer_count:int,is_anita:bool,fold_count:int}>}
      *         started_at is returned as a UTC "Y-m-d H:i:s" string, ready for the database.
      */
     public static function gameUpload(array $g, bool $requireGroupId = true): array
@@ -83,6 +83,10 @@ final class Validate
             if (!is_int($boer) || $boer < 0) {
                 self::fail('ongeldig aantal boeren');
             }
+            $fold = $p['fold_count'] ?? 0;
+            if (!is_int($fold) || $fold < 0) {
+                self::fail('ongeldig aantal keer gepast');
+            }
             $anita = $p['is_anita'] ?? false;
             if (!is_bool($anita)) {
                 self::fail('ongeldige anita');
@@ -95,7 +99,7 @@ final class Validate
                     self::fail('anita moet het maximum hebben');
                 }
             }
-            $players[] = ['name' => $name, 'final_score' => $score, 'boer_count' => $boer, 'is_anita' => $anita];
+            $players[] = ['name' => $name, 'final_score' => $score, 'boer_count' => $boer, 'is_anita' => $anita, 'fold_count' => $fold];
         }
 
         $winner = $g['winner'] ?? null;

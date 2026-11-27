@@ -80,6 +80,30 @@ final class GamesTest extends TestCase
         }
     }
 
+    public function test_fold_count_round_trips(): void
+    {
+        [$tim, $g] = $this->setup2();
+        $r = $this->call('POST', '/games', $this->upload($g, ['players' => [
+            ['name' => 'Tim', 'final_score' => 15, 'boer_count' => 0, 'fold_count' => 3],
+            ['name' => 'Ravi', 'final_score' => 7, 'boer_count' => 0, 'fold_count' => 0],
+        ]]), $tim['token']);
+        $this->assertSame(201, $r->status);
+        $list = $this->call('GET', '/groups', null, $tim['token']);
+        $players = $list->body['groups'][0]['games'][0]['players'];
+        $this->assertSame(3, $players[0]['fold_count']);
+        $this->assertSame(0, $players[1]['fold_count']);
+    }
+
+    public function test_missing_fold_count_defaults_zero(): void
+    {
+        [$tim, $g] = $this->setup2();
+        $this->call('POST', '/games', $this->upload($g), $tim['token']);
+        $list = $this->call('GET', '/groups', null, $tim['token']);
+        foreach ($list->body['groups'][0]['games'][0]['players'] as $p) {
+            $this->assertSame(0, $p['fold_count']);
+        }
+    }
+
     public function test_duplicate_upload_returns_200_duplicate_true(): void
     {
         [$tim, $g] = $this->setup2();
@@ -217,6 +241,8 @@ final class GamesTest extends TestCase
             'anita not bool' => [['players' => [['name' => 'Tim', 'final_score' => 15, 'boer_count' => 0, 'is_anita' => 1], $p('Ravi')], 'winner' => null]],
             'two anitas' => [['players' => [['name' => 'Tim', 'final_score' => 15, 'boer_count' => 0, 'is_anita' => true], ['name' => 'Ravi', 'final_score' => 15, 'boer_count' => 0, 'is_anita' => true]], 'winner' => null]],
             'anita below max' => [['players' => [['name' => 'Tim', 'final_score' => 14, 'boer_count' => 0, 'is_anita' => true], $p('Ravi')], 'winner' => null]],
+            'negative folds' => [['players' => [['name' => 'Tim', 'final_score' => 1, 'boer_count' => 0, 'fold_count' => -1], $p('Ravi')], 'winner' => null]],
+            'folds not int' => [['players' => [['name' => 'Tim', 'final_score' => 1, 'boer_count' => 0, 'fold_count' => '2'], $p('Ravi')], 'winner' => null]],
             'negative boer' => [['players' => [['name' => 'Tim', 'final_score' => 1, 'boer_count' => -1], $p('Ravi')], 'winner' => null]],
         ];
     }

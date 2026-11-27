@@ -69,7 +69,7 @@ final class GroupsTest extends TestCase
         $this->assertNull($api['games'][0]['winner']);
         $this->assertSame('Anna', $api['games'][1]['winner']);
         $this->assertSame('tim', $api['games'][0]['recorded_by']);
-        $this->assertSame(['name' => 'Cas', 'final_score' => 3, 'boer_count' => 1, 'is_anita' => false], $api['games'][2]['players'][0]);
+        $this->assertSame(['name' => 'Cas', 'final_score' => 3, 'boer_count' => 1, 'is_anita' => false, 'fold_count' => 0], $api['games'][2]['players'][0]);
         $this->assertFalse($api['games'][0]['ended_early']);
     }
 
