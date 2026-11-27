@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact'
 import { Button } from './Button'
 import { Dialog } from './Dialog'
 
@@ -6,12 +7,14 @@ export function ConfirmDialog(props: {
   message: string
   confirmLabel?: string
   danger?: boolean
+  children?: ComponentChildren
   onConfirm: () => void
   onCancel: () => void
 }) {
   return (
     <Dialog title={props.title} onClose={props.onCancel}>
       <p>{props.message}</p>
+      {props.children}
       <div class="dialog-actions">
         <Button variant="ghost" onClick={props.onCancel}>
           Annuleren

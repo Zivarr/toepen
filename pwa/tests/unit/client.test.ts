@@ -129,6 +129,42 @@ describe('endpoints', () => {
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ mode: 'link', group_id: 7, mapping: { Rav: 3 } })
   })
 
+  it('admin.startSeason posts name and starts_at', async () => {
+    const state = { first_season_name: null, seasons: [{ id: 1, name: 'Zomer', starts_at: '2027-03-03T20:00:00+01:00' }] }
+    fetchMock.mockResolvedValue(json(201, state))
+    expect(await admin.startSeason(4, { name: 'Zomer', starts_at: '2027-03-03T20:00:00+01:00' })).toEqual(state)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/admin/groups/4/seasons')
+    expect(init.method).toBe('POST')
+    expect(JSON.parse(init.body)).toEqual({ name: 'Zomer', starts_at: '2027-03-03T20:00:00+01:00' })
+  })
+
+  it('admin.updateSeason patches the season', async () => {
+    fetchMock.mockResolvedValue(json(200, { first_season_name: null, seasons: [] }))
+    await admin.updateSeason(9, { name: null })
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/admin/seasons/9')
+    expect(init.method).toBe('PATCH')
+    expect(JSON.parse(init.body)).toEqual({ name: null })
+  })
+
+  it('admin.deleteSeason deletes the season', async () => {
+    fetchMock.mockResolvedValue(json(200, { first_season_name: null, seasons: [] }))
+    expect(await admin.deleteSeason(9)).toEqual({ first_season_name: null, seasons: [] })
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/admin/seasons/9')
+    expect(init.method).toBe('DELETE')
+  })
+
+  it('admin.renameFirstSeason patches the first season name', async () => {
+    fetchMock.mockResolvedValue(json(200, { first_season_name: 'Oud', seasons: [] }))
+    await admin.renameFirstSeason(4, 'Oud')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/admin/groups/4/first-season')
+    expect(init.method).toBe('PATCH')
+    expect(JSON.parse(init.body)).toEqual({ name: 'Oud' })
+  })
+
   it('deviceName shortens user agent', () => {
     expect(deviceName('Mozilla/5.0 (iPhone; CPU iPhone OS 17)')).toBe('iPhone')
     expect(deviceName('Mozilla/5.0 (Linux; Android 14)')).toBe('Android')
