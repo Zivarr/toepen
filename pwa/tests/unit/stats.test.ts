@@ -52,11 +52,30 @@ describe('leaderboard anita', () => {
   })
 })
 
+describe('leaderboard folds', () => {
+  const withFolds = (g: Game, folds: Record<string, number>): Game => ({
+    ...g, players: g.players.map((p) => ({ ...p, fold_count: folds[p.name] ?? 0 })),
+  })
+  it('counts folds per player', () => {
+    const lb = leaderboard([
+      withFolds(game('Ravi', [['Ravi', 3, 0], ['Kees', 10, 0]], MIN), { Ravi: 2, Kees: 1 }),
+      withFolds(game('Kees', [['Ravi', 10, 0], ['Kees', 4, 0]], MIN), { Ravi: 3 }),
+    ])
+    expect(lb.find((p) => p.name === 'Ravi')!.folds).toBe(5)
+    expect(lb.find((p) => p.name === 'Kees')!.folds).toBe(1)
+  })
+  it('missing fold_count counts as zero', () => {
+    const old = game('Ravi', [['Ravi', 3, 0], ['Kees', 10, 0]], MIN)
+    old.players = old.players.map(({ fold_count: _omit, ...rest }) => rest) as unknown as Game['players']
+    expect(leaderboard([old]).map((p) => p.folds)).toEqual([0, 0])
+  })
+})
+
 describe('leaderboard', () => {
   const lb = leaderboard(games)
   it('counts wins, played, boer, winRate (case-insensitive names)', () => {
     expect(lb.find((p) => p.name === 'Ravi')).toEqual({
-      name: 'Ravi', wins: 2, played: 4, winRate: 0.5, boer: 1, anita: 0, avgDurationMs: 20 * MIN, totalDurationMs: 61 * MIN,
+      name: 'Ravi', wins: 2, played: 4, winRate: 0.5, boer: 1, anita: 0, folds: 0, avgDurationMs: 20 * MIN, totalDurationMs: 61 * MIN,
     })
     const kees = lb.find((p) => p.name === 'Kees')!
     expect(kees).toMatchObject({ wins: 1, played: 4, boer: 3, winRate: 0.25 })
