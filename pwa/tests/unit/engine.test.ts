@@ -71,7 +71,7 @@ describe('engine', () => {
     const { s, events } = run(mk(), { type: 'klop' }, { type: 'klop' }, { type: 'klop' }, { type: 'klop' }, { type: 'klop' }, pen('Alice'))
     expect(s.scores.Alice).toBe(5)
     expect(isEliminated(s, 'Alice')).toBe(true)
-    expect(events).toEqual([{ type: 'eliminated', name: 'Alice' }])
+    expect(events).toEqual([{ type: 'eliminated', name: 'Alice', anita: true }])
     expect(s.isOver).toBe(false)
   })
   it('game over when one player remains, winner set, gameOver emitted once', () => {
@@ -115,15 +115,76 @@ describe('engine', () => {
     expect(s.winner).toBeNull()
     expect(events).toEqual([{ type: 'gameOver', winner: null }])
   })
+  it('first knockout sets anita and flags the event', () => {
+    const { s, events } = run(mk(['A', 'B', 'C'], 2), pen('A'), pen('A'))
+    expect(s.anita).toBe('A')
+    expect(events).toEqual([{ type: 'eliminated', name: 'A', anita: true }])
+  })
+  it('later knockouts do not change anita', () => {
+    const { s, events } = run(mk(['A', 'B', 'C', 'D'], 2), pen('A'), pen('A'), pen('B'), pen('B'))
+    expect(s.anita).toBe('A')
+    expect(events[1]).toEqual({ type: 'eliminated', name: 'B', anita: false })
+  })
+  it('undo of the first knockout clears anita', () => {
+    let { s } = run(mk(['A', 'B', 'C', 'D'], 2), pen('A'), pen('A'))
+    s = run(s, { type: 'undo' }).s
+    expect(s.anita).toBeNull()
+    s = run(s, pen('B'), pen('B')).s
+    expect(s.anita).toBe('B')
+  })
+  it('knockout on a pre-update state without anita still records the anita', () => {
+    const old = mk(['A', 'B', 'C'], 2) as unknown as Record<string, unknown>
+    delete old.anita
+    const { s, events } = run(old as unknown as GameState, pen('A'), pen('A'))
+    expect(s.anita).toBe('A')
+    expect(events).toEqual([{ type: 'eliminated', name: 'A', anita: true }])
+    expect(run(s, { type: 'undo' }).s.anita).toBeNull()
+  })
+  it('resumed pre-update state with one player already out makes that player the anita', () => {
+    const old = mk(['A', 'B', 'C', 'D'], 2) as unknown as Record<string, unknown>
+    delete old.anita
+    ;(old.scores as Record<string, number>).A = 2
+    const { s, events } = run(old as unknown as GameState, pen('B'), pen('B'))
+    expect(s.anita).toBe('A')
+    expect(events).toEqual([{ type: 'eliminated', name: 'B', anita: false }])
+  })
+  it('resumed pre-update state with two players already out records no anita', () => {
+    const old = mk(['A', 'B', 'C', 'D', 'E'], 2) as unknown as Record<string, unknown>
+    delete old.anita
+    Object.assign(old.scores as Record<string, number>, { A: 2, B: 2 })
+    const { s, events } = run(old as unknown as GameState, pen('C'), pen('C'))
+    expect(events).toEqual([{ type: 'eliminated', name: 'C', anita: false }])
+    expect(toUpload(s, 'x', 1).players.every((p) => p.is_anita === false)).toBe(true)
+  })
+  it('endEarly before any knockout leaves anita null', () => {
+    expect(run(mk(), { type: 'endEarly' }).s.anita).toBeNull()
+  })
+  it('endEarly after a knockout keeps anita', () => {
+    const { s } = run(mk(['A', 'B', 'C'], 2), pen('A'), pen('A'), { type: 'endEarly' })
+    expect(s.anita).toBe('A')
+  })
+  it('two players: the only knockout is the anita', () => {
+    const { s, events } = run(mk(['A', 'B'], 1), pen('A'))
+    expect(s.isOver).toBe(true)
+    expect(s.winner).toBe('B')
+    expect(s.anita).toBe('A')
+    expect(events[0]).toEqual({ type: 'eliminated', name: 'A', anita: true })
+  })
+  it('toUpload flags only the anita', () => {
+    const { s } = run(mk(['A', 'B', 'C'], 2), pen('B'), pen('B'), { type: 'endEarly' })
+    expect(toUpload(s, 'x', 1).players.map((p) => p.is_anita)).toEqual([false, true, false])
+    const none = run(mk(), { type: 'endEarly' }).s
+    expect(toUpload(none, 'x', 1).players.every((p) => p.is_anita === false)).toBe(true)
+  })
   it('toUpload maps seats, scores, boer and ended_early', () => {
     const { s } = run(mk(), pen('Bob'), { type: 'boer', name: 'Charlie' }, { type: 'endEarly' })
     const u = toUpload(s, '123e4567-e89b-12d3-a456-426614174000', 7)
     expect(u.id).toBe('123e4567-e89b-12d3-a456-426614174000')
     expect(u.group_id).toBe(7)
     expect(u.players).toEqual([
-      { name: 'Alice', final_score: 0, boer_count: 0 },
-      { name: 'Bob', final_score: 1, boer_count: 0 },
-      { name: 'Charlie', final_score: 0, boer_count: 1 },
+      { name: 'Alice', final_score: 0, boer_count: 0, is_anita: false },
+      { name: 'Bob', final_score: 1, boer_count: 0, is_anita: false },
+      { name: 'Charlie', final_score: 0, boer_count: 1, is_anita: false },
     ])
     expect(u.ended_early).toBe(true)
     expect(u.winner).toBeNull()

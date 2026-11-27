@@ -1,6 +1,6 @@
 import type { GameUpload } from '../types'
 
-type Snapshot = { scores: Record<string, number>; boer: Record<string, number> }
+type Snapshot = { scores: Record<string, number>; boer: Record<string, number>; anita: string | null }
 
 export interface GameState {
   players: string[]
@@ -13,6 +13,7 @@ export interface GameState {
   isOver: boolean
   endedEarly: boolean
   winner: string | null
+  anita: string | null
   durationMs: number
 }
 
@@ -24,7 +25,7 @@ export type Action =
   | { type: 'endEarly' }
 
 export type GameEvent =
-  | { type: 'eliminated'; name: string }
+  | { type: 'eliminated'; name: string; anita: boolean }
   | { type: 'gameOver'; winner: string | null }
   | { type: 'undoEmpty' }
 
@@ -41,12 +42,22 @@ export function newGame(players: string[], maxPenaltyPoints: number, now: number
     isOver: false,
     endedEarly: false,
     winner: null,
+    anita: null,
     durationMs: 0,
   }
 }
 
 export function isEliminated(s: GameState, name: string): boolean {
   return (s.scores[name] ?? 0) >= s.maxPenaltyPoints
+}
+
+// A game persisted before the Anita existed has no anita field. Derive it from
+// who is already out: none -> null, one -> that player, more -> '' (unknown,
+// never equals a name and is not null, so nobody becomes the Anita).
+function currentAnita(s: GameState): string | null {
+  if (s.anita !== undefined) return s.anita
+  const out = s.players.filter((p) => isEliminated(s, p))
+  return out.length === 0 ? null : out.length === 1 ? out[0] : ''
 }
 
 export function apply(s: GameState, a: Action, now: number): { state: GameState; events: GameEvent[] } {
@@ -82,14 +93,18 @@ export function apply(s: GameState, a: Action, now: number): { state: GameState;
         score = Math.max(0, cur - 1)
         boer[a.name] = (boer[a.name] ?? 0) + 1
       }
+      const knockedOut = score >= max
+      const anita = currentAnita(s)
+      const firstOut = knockedOut && anita === null
       const next: GameState = {
         ...s,
         scores: { ...s.scores, [a.name]: score },
         boer,
-        history: [...s.history, { scores: s.scores, boer: s.boer }],
+        anita: firstOut ? a.name : anita,
+        history: [...s.history, { scores: s.scores, boer: s.boer, anita }],
       }
       const events: GameEvent[] = []
-      if (score >= max) events.push({ type: 'eliminated', name: a.name })
+      if (knockedOut) events.push({ type: 'eliminated', name: a.name, anita: firstOut })
       const alive = next.players.filter((p) => !isEliminated(next, p))
       if (alive.length <= 1) {
         const winner = alive[0] ?? null
@@ -127,6 +142,7 @@ export function toUpload(s: GameState, id: string, groupId: number): GameUpload 
       name,
       final_score: s.scores[name],
       boer_count: s.boer[name] ?? 0,
+      is_anita: s.anita === name,
     })),
   }
 }

@@ -56,6 +56,30 @@ final class GamesTest extends TestCase
         $this->assertSame(self::UUID, $list->body['groups'][0]['games'][0]['id']);
     }
 
+    public function test_is_anita_round_trips(): void
+    {
+        [$tim, $g] = $this->setup2();
+        $r = $this->call('POST', '/games', $this->upload($g, ['players' => [
+            ['name' => 'Tim', 'final_score' => 15, 'boer_count' => 2, 'is_anita' => true],
+            ['name' => 'Ravi', 'final_score' => 7, 'boer_count' => 0, 'is_anita' => false],
+        ]]), $tim['token']);
+        $this->assertSame(201, $r->status);
+        $list = $this->call('GET', '/groups', null, $tim['token']);
+        $players = $list->body['groups'][0]['games'][0]['players'];
+        $this->assertTrue($players[0]['is_anita']);
+        $this->assertFalse($players[1]['is_anita']);
+    }
+
+    public function test_missing_is_anita_defaults_false(): void
+    {
+        [$tim, $g] = $this->setup2();
+        $this->call('POST', '/games', $this->upload($g), $tim['token']);
+        $list = $this->call('GET', '/groups', null, $tim['token']);
+        foreach ($list->body['groups'][0]['games'][0]['players'] as $p) {
+            $this->assertFalse($p['is_anita']);
+        }
+    }
+
     public function test_duplicate_upload_returns_200_duplicate_true(): void
     {
         [$tim, $g] = $this->setup2();
@@ -190,6 +214,9 @@ final class GamesTest extends TestCase
             'max zero' => [['max_penalty_points' => 0]],
             'max 101' => [['max_penalty_points' => 101]],
             'negative duration' => [['duration_ms' => -1]],
+            'anita not bool' => [['players' => [['name' => 'Tim', 'final_score' => 15, 'boer_count' => 0, 'is_anita' => 1], $p('Ravi')], 'winner' => null]],
+            'two anitas' => [['players' => [['name' => 'Tim', 'final_score' => 15, 'boer_count' => 0, 'is_anita' => true], ['name' => 'Ravi', 'final_score' => 15, 'boer_count' => 0, 'is_anita' => true]], 'winner' => null]],
+            'anita below max' => [['players' => [['name' => 'Tim', 'final_score' => 14, 'boer_count' => 0, 'is_anita' => true], $p('Ravi')], 'winner' => null]],
             'negative boer' => [['players' => [['name' => 'Tim', 'final_score' => 1, 'boer_count' => -1], $p('Ravi')], 'winner' => null]],
         ];
     }
