@@ -138,7 +138,7 @@ final class Groups
             'max_penalty_points' => (int)$g['max_penalty_points'],
             'players' => $players,
             'games' => self::gamesFor($pdo, $groupId),
-        ];
+        ] + Seasons::state($pdo, $groupId);
     }
 
     /** Non-deleted games of a group, newest first, in the Game shape. */

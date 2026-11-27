@@ -135,7 +135,7 @@ final class Validate
     }
 
     /** ISO 8601 with a mandatory offset (or Z) to UTC "Y-m-d H:i:s". */
-    private static function parseStartedAt(mixed $value): string
+    public static function parseStartedAt(mixed $value): string
     {
         $re = '/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?(Z|[+-]\d{2}:?\d{2})$/i';
         if (!is_string($value) || !preg_match($re, $value)) {

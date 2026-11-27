@@ -4,12 +4,12 @@ declare(strict_types=1);
 /** Admin: users, memberships, merges, the bin and the full export. */
 final class AdminHandlers
 {
-    private static function invalid(string $reason): ApiError
+    public static function invalid(string $reason): ApiError
     {
         return new ApiError(422, 'validation_failed', 'Ongeldige invoer: ' . $reason);
     }
 
-    private static function body(Request $req): array
+    public static function body(Request $req): array
     {
         if (!is_array($req->json)) {
             throw self::invalid('geen geldige gegevens.');
@@ -18,7 +18,7 @@ final class AdminHandlers
     }
 
     /** Runs $fn inside one transaction, rolling back on any exception. */
-    private static function atomic(PDO $pdo, callable $fn): mixed
+    public static function atomic(PDO $pdo, callable $fn): mixed
     {
         $pdo->beginTransaction();
         try {
@@ -209,7 +209,7 @@ final class AdminHandlers
 
     // ---- groups and memberships --------------------------------------------------------------
 
-    private static function requireGroup(PDO $pdo, int $id): void
+    public static function requireGroup(PDO $pdo, int $id): void
     {
         $st = $pdo->prepare('SELECT 1 FROM game_groups WHERE id = ?');
         $st->execute([$id]);
@@ -234,7 +234,7 @@ final class AdminHandlers
         $out = [];
         foreach ($rows as $r) {
             $members->execute([(int)$r['id']]);
-            $out[] = [
+            $out[] = Seasons::state($pdo, (int)$r['id']) + [
                 'id' => (int)$r['id'],
                 'name' => $r['name'],
                 'creator' => $r['creator'],
@@ -411,6 +411,7 @@ final class AdminHandlers
                  SELECT ?, user_id, added_by, added_at FROM group_members WHERE group_id = ?'
             )->execute([$dst, $src]);
             $pdo->prepare('DELETE FROM group_members WHERE group_id = ?')->execute([$src]);
+            $pdo->prepare('DELETE FROM seasons WHERE group_id = ?')->execute([$src]);
             $pdo->prepare('DELETE FROM game_groups WHERE id = ?')->execute([$src]);
         });
         return new Response(200, ['group' => Groups::toApi($pdo, $dst)]);
