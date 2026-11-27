@@ -46,7 +46,8 @@ function srvGroup(over: Partial<Group> = {}): Group {
   return {
     id: 5, name: 'Werk', creator: 'tim', max_penalty_points: 10,
     players: [{ id: 1, name: 'Anna', games_played: 1 }, { id: 2, name: 'Bob', games_played: 1 }],
-    games: [{ ...upload('srv-1'), group_id: 5, recorded_by: 'kees' }], ...over,
+    games: [{ ...upload('srv-1'), group_id: 5, recorded_by: 'kees' }],
+    first_season_name: null, seasons: [], ...over,
   }
 }
 
@@ -212,6 +213,17 @@ describe('refresh', () => {
     expect(g?.playerNames).toEqual(['Anna', 'Bob', 'Cor'])
     expect(g?.pendingPlayers).toEqual(['Cor'])
     expect(g?.maxPenaltyPoints).toBe(10)
+  })
+
+  it('refresh stores seasons and the first season name on the cached group', async () => {
+    const seasons = [{ id: 7, name: 'Winter', starts_at: '2027-01-01T00:00:00+01:00' }]
+    m.fetchGroups.mockResolvedValue({
+      notModified: false, groups: [srvGroup({ seasons, first_season_name: 'Begin' })], etag: 'e',
+    })
+    await refresh()
+    const g = await getGroup('server:5')
+    expect(g?.seasons).toEqual(seasons)
+    expect(g?.firstSeasonName).toBe('Begin')
   })
 
   it('refresh with 304 changes nothing', async () => {

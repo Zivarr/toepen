@@ -27,6 +27,11 @@ export interface Game {
   winner: string | null
   players: GamePlayer[]
 }
+export interface ApiSeason {
+  id: number
+  name: string | null
+  starts_at: string
+}
 export interface Group {
   id: number
   name: string
@@ -34,6 +39,8 @@ export interface Group {
   max_penalty_points: number
   players: Player[]
   games: Game[]
+  first_season_name: string | null
+  seasons: ApiSeason[]
 }
 /** Game without recorded_by; group_id omitted inside sync requests. */
 export type GameUpload = Omit<Game, 'recorded_by' | 'group_id'> & { group_id?: number }
@@ -61,6 +68,9 @@ export interface CachedGroup {
   syncRequestId?: number
   syncStatus?: 'pending' | 'rejected'
   rejectReason?: string
+  /** Absent on groups cached before seasons existed; treat as [] / null. */
+  seasons?: ApiSeason[]
+  firstSeasonName?: string | null
 }
 export interface StoredGame extends Game {
   groupKey: GroupKey

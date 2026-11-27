@@ -48,6 +48,8 @@ export async function refresh(): Promise<'updated' | 'unchanged' | 'offline'> {
         maxPenaltyPoints: sg.max_penalty_points,
         playerNames: [...serverNames, ...stillPending],
         pendingPlayers: stillPending,
+        seasons: sg.seasons,
+        firstSeasonName: sg.first_season_name,
       }
       await db.groups.put(group)
       await db.games.where('groupKey').equals(key).delete()

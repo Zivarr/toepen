@@ -9,3 +9,8 @@ export function formatDuration(ms: number): string {
 export function scoreLabel(p: { final_score: number; boer_count: number }): string {
   return p.boer_count > 0 ? `${p.final_score} (${p.boer_count}× Boer)` : String(p.final_score)
 }
+
+/** Day and long month, e.g. "3 maart". */
+export function formatDay(ms: number): string {
+  return new Date(ms).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })
+}
