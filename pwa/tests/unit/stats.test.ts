@@ -30,11 +30,33 @@ describe('leaderboard name key', () => {
   })
 })
 
+describe('leaderboard anita', () => {
+  const withAnita = (g: Game, anita: string): Game => ({
+    ...g, players: g.players.map((p) => ({ ...p, is_anita: p.name === anita })),
+  })
+  it('counts anitas per player', () => {
+    const lb = leaderboard([
+      withAnita(game('Ravi', [['Tim', 10, 0], ['Ravi', 3, 0], ['Kees', 5, 0]], MIN), 'Tim'),
+      withAnita(game('Kees', [['Tim', 10, 0], ['Ravi', 8, 0], ['Kees', 5, 0]], MIN), 'Tim'),
+      withAnita(game('Kees', [['Tim', 6, 0], ['Ravi', 10, 0], ['Kees', 5, 0]], MIN), 'Ravi'),
+    ])
+    expect(lb.find((p) => p.name === 'Tim')!.anita).toBe(2)
+    expect(lb.find((p) => p.name === 'Ravi')!.anita).toBe(1)
+    expect(lb.find((p) => p.name === 'Kees')!.anita).toBe(0)
+  })
+  it('missing is_anita counts as zero', () => {
+    const old = game('Ravi', [['Ravi', 3, 0], ['Kees', 10, 0]], MIN)
+    old.players = old.players.map(({ is_anita: _omit, ...rest }) => rest) as unknown as Game['players']
+    const lb = leaderboard([old])
+    expect(lb.map((p) => p.anita)).toEqual([0, 0])
+  })
+})
+
 describe('leaderboard', () => {
   const lb = leaderboard(games)
   it('counts wins, played, boer, winRate (case-insensitive names)', () => {
     expect(lb.find((p) => p.name === 'Ravi')).toEqual({
-      name: 'Ravi', wins: 2, played: 4, winRate: 0.5, boer: 1, avgDurationMs: 20 * MIN, totalDurationMs: 61 * MIN,
+      name: 'Ravi', wins: 2, played: 4, winRate: 0.5, boer: 1, anita: 0, avgDurationMs: 20 * MIN, totalDurationMs: 61 * MIN,
     })
     const kees = lb.find((p) => p.name === 'Kees')!
     expect(kees).toMatchObject({ wins: 1, played: 4, boer: 3, winRate: 0.25 })

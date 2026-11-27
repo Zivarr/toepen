@@ -7,6 +7,7 @@ export interface PlayerStats {
   played: number
   winRate: number // wins / played, 0..1
   boer: number
+  anita: number
   avgDurationMs: number | null
   totalDurationMs: number
 }
@@ -23,7 +24,7 @@ const key = normalise
 const byName = (a: string, b: string) => a.localeCompare(b, 'nl')
 
 export function leaderboard(games: Game[]): PlayerStats[] {
-  interface Acc { name: string; wins: number; played: number; boer: number; total: number; sum: number; n: number }
+  interface Acc { name: string; wins: number; played: number; boer: number; anita: number; total: number; sum: number; n: number }
   const map = new Map<string, Acc>()
   for (const g of games) {
     const winner = g.winner === null ? null : key(g.winner)
@@ -31,11 +32,12 @@ export function leaderboard(games: Game[]): PlayerStats[] {
       const k = key(p.name)
       let a = map.get(k)
       if (!a) {
-        a = { name: p.name, wins: 0, played: 0, boer: 0, total: 0, sum: 0, n: 0 }
+        a = { name: p.name, wins: 0, played: 0, boer: 0, anita: 0, total: 0, sum: 0, n: 0 }
         map.set(k, a)
       }
       a.played++
       a.boer += p.boer_count
+      a.anita += p.is_anita ? 1 : 0 // absent on games cached before the Anita
       a.total += g.duration_ms
       if (winner === k) a.wins++
       if (!g.ended_early) {
@@ -51,6 +53,7 @@ export function leaderboard(games: Game[]): PlayerStats[] {
       played: a.played,
       winRate: a.played ? a.wins / a.played : 0,
       boer: a.boer,
+      anita: a.anita,
       avgDurationMs: a.n ? Math.round(a.sum / a.n) : null,
       totalDurationMs: a.total,
     }))

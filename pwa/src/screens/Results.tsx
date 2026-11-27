@@ -129,7 +129,10 @@ export function Results({ groupKey }: { groupKey: string }) {
               <ul class="plain">
                 {g.players.map((p) => (
                   <li key={p.name} class="score-line">
-                    <span>{p.name}</span>
+                    <span>
+                      {p.name}
+                      {p.is_anita && <span class="tag tag-anita">Anita</span>}
+                    </span>
                     <span>{scoreLabel(p)}</span>
                   </li>
                 ))}

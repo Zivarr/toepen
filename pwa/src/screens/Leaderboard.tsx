@@ -60,6 +60,7 @@ export function Leaderboard({ groupKey }: { groupKey: string }) {
                 <th>Gespeeld</th>
                 <th>%</th>
                 <th>Boeren</th>
+                <th>Anita's</th>
                 <th>Gem. duur</th>
               </tr>
             </thead>
@@ -71,6 +72,7 @@ export function Leaderboard({ groupKey }: { groupKey: string }) {
                   <td>{r.played}</td>
                   <td>{Math.round(r.winRate * 100)}%</td>
                   <td>{r.boer}</td>
+                  <td>{r.anita}</td>
                   <td>{dur(r.avgDurationMs)}</td>
                 </tr>
               ))}
