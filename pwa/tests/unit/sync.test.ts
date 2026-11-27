@@ -26,7 +26,7 @@ function upload(id: string, groupId = 5): GameUpload {
   return {
     id, group_id: groupId, started_at: '2026-11-18T21:00:00+01:00', duration_ms: 120000,
     max_penalty_points: 10, ended_early: false, winner: 'Anna',
-    players: [{ name: 'Anna', final_score: 3, boer_count: 0, is_anita: false }, { name: 'Bob', final_score: 10, boer_count: 1, is_anita: false }],
+    players: [{ name: 'Anna', final_score: 3, boer_count: 0, fold_count: 0, is_anita: false }, { name: 'Bob', final_score: 10, boer_count: 1, fold_count: 0, is_anita: false }],
   }
 }
 const serverGroup: CachedGroup = {

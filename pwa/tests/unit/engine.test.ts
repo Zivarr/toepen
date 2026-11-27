@@ -176,15 +176,41 @@ describe('engine', () => {
     const none = run(mk(), { type: 'endEarly' }).s
     expect(toUpload(none, 'x', 1).players.every((p) => p.is_anita === false)).toBe(true)
   })
+  it('fold counts per player', () => {
+    const f = (name: string): Action => ({ type: 'fold', name })
+    const { s } = run(mk(), { type: 'klop' }, f('Alice'), f('Alice'), f('Bob'))
+    expect(s.folds).toEqual({ Alice: 2, Bob: 1, Charlie: 0 })
+  })
+  it('fold in a 1-point round still counts', () => {
+    const { s } = run(mk(), { type: 'fold', name: 'Alice' })
+    expect(s.scores.Alice).toBe(0)
+    expect(s.folds.Alice).toBe(1)
+  })
+  it('penalty and boer do not count as folds', () => {
+    const { s } = run(mk(), pen('Alice'), { type: 'boer', name: 'Alice' })
+    expect(s.folds).toEqual({ Alice: 0, Bob: 0, Charlie: 0 })
+  })
+  it('undo restores fold counts', () => {
+    const { s } = run(mk(), { type: 'fold', name: 'Alice' }, { type: 'undo' })
+    expect(s.folds.Alice).toBe(0)
+  })
+  it('fold on a pre-update state without folds counts from zero', () => {
+    const old = mk()
+    delete (old as unknown as { folds?: unknown }).folds
+    const { s } = run(old, { type: 'fold', name: 'Alice' })
+    expect(s.folds.Alice).toBe(1)
+    expect(toUpload(s, 'x', 1).players.map((p) => p.fold_count)).toEqual([1, 0, 0])
+    expect(run(s, { type: 'undo' }).s.folds.Alice ?? 0).toBe(0)
+  })
   it('toUpload maps seats, scores, boer and ended_early', () => {
     const { s } = run(mk(), pen('Bob'), { type: 'boer', name: 'Charlie' }, { type: 'endEarly' })
     const u = toUpload(s, '123e4567-e89b-12d3-a456-426614174000', 7)
     expect(u.id).toBe('123e4567-e89b-12d3-a456-426614174000')
     expect(u.group_id).toBe(7)
     expect(u.players).toEqual([
-      { name: 'Alice', final_score: 0, boer_count: 0, is_anita: false },
-      { name: 'Bob', final_score: 1, boer_count: 0, is_anita: false },
-      { name: 'Charlie', final_score: 0, boer_count: 1, is_anita: false },
+      { name: 'Alice', final_score: 0, boer_count: 0, fold_count: 0, is_anita: false },
+      { name: 'Bob', final_score: 1, boer_count: 0, fold_count: 0, is_anita: false },
+      { name: 'Charlie', final_score: 0, boer_count: 1, fold_count: 0, is_anita: false },
     ])
     expect(u.ended_early).toBe(true)
     expect(u.winner).toBeNull()
