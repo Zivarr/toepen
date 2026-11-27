@@ -13,6 +13,7 @@ export interface GamePlayer {
   name: string
   final_score: number
   boer_count: number
+  is_anita: boolean
 }
 export interface Game {
   id: string

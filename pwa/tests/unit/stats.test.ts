@@ -8,7 +8,7 @@ function game(winner: string | null, players: [string, number, number][], dur: n
   return {
     id: `g${n++}`, group_id: 1, recorded_by: 'x', started_at: '2026-11-18T20:00:00+01:00',
     duration_ms: dur, max_penalty_points: 10, ended_early: early, winner,
-    players: players.map(([name, s, b]) => ({ name, final_score: s, boer_count: b })),
+    players: players.map(([name, s, b]) => ({ name, final_score: s, boer_count: b, is_anita: false })),
   }
 }
 

@@ -82,7 +82,7 @@ export function Game() {
     const base: Current = stored && stored.groupKey !== held.groupKey ? { ...held, groupKey: stored.groupKey } : held
     const r = apply(base.state, action, Date.now())
     for (const e of r.events) {
-      if (e.type === 'eliminated') toast(`${e.name} heeft verloren!`)
+      if (e.type === 'eliminated') toast(e.anita ? `${e.name} heeft verloren en is de Anita!` : `${e.name} heeft verloren!`)
       else if (e.type === 'undoEmpty') toast('Niks om ongedaan te maken')
     }
     if (r.state === base.state) {

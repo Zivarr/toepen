@@ -1,6 +1,6 @@
 import type { GameUpload } from '../types'
 
-type Snapshot = { scores: Record<string, number>; boer: Record<string, number> }
+type Snapshot = { scores: Record<string, number>; boer: Record<string, number>; anita: string | null }
 
 export interface GameState {
   players: string[]
@@ -13,6 +13,7 @@ export interface GameState {
   isOver: boolean
   endedEarly: boolean
   winner: string | null
+  anita: string | null
   durationMs: number
 }
 
@@ -24,7 +25,7 @@ export type Action =
   | { type: 'endEarly' }
 
 export type GameEvent =
-  | { type: 'eliminated'; name: string }
+  | { type: 'eliminated'; name: string; anita: boolean }
   | { type: 'gameOver'; winner: string | null }
   | { type: 'undoEmpty' }
 
@@ -41,6 +42,7 @@ export function newGame(players: string[], maxPenaltyPoints: number, now: number
     isOver: false,
     endedEarly: false,
     winner: null,
+    anita: null,
     durationMs: 0,
   }
 }
@@ -82,14 +84,17 @@ export function apply(s: GameState, a: Action, now: number): { state: GameState;
         score = Math.max(0, cur - 1)
         boer[a.name] = (boer[a.name] ?? 0) + 1
       }
+      const knockedOut = score >= max
+      const firstOut = knockedOut && s.anita === null
       const next: GameState = {
         ...s,
         scores: { ...s.scores, [a.name]: score },
         boer,
-        history: [...s.history, { scores: s.scores, boer: s.boer }],
+        anita: firstOut ? a.name : s.anita,
+        history: [...s.history, { scores: s.scores, boer: s.boer, anita: s.anita }],
       }
       const events: GameEvent[] = []
-      if (score >= max) events.push({ type: 'eliminated', name: a.name })
+      if (knockedOut) events.push({ type: 'eliminated', name: a.name, anita: firstOut })
       const alive = next.players.filter((p) => !isEliminated(next, p))
       if (alive.length <= 1) {
         const winner = alive[0] ?? null
@@ -127,6 +132,7 @@ export function toUpload(s: GameState, id: string, groupId: number): GameUpload 
       name,
       final_score: s.scores[name],
       boer_count: s.boer[name] ?? 0,
+      is_anita: s.anita === name,
     })),
   }
 }
