@@ -88,3 +88,21 @@ export function playerOrder(names: string[], games: Game[]): string[] {
   const n = (s: string) => played.get(key(s)) ?? 0
   return [...names].sort((a, b) => n(b) - n(a) || byName(a, b))
 }
+
+export type RankStat = 'wins' | 'winRate' | 'boer' | 'anita' | 'folds' | 'duration'
+
+const statValue = (p: PlayerStats, stat: RankStat): number | null =>
+  stat === 'duration' ? p.avgDurationMs : stat === 'winRate' ? p.winRate : p[stat]
+
+export function rankRows(rows: PlayerStats[], stat: RankStat): PlayerStats[] {
+  return [...rows].sort((x, y) => {
+    const a = statValue(x, stat)
+    const b = statValue(y, stat)
+    if (a !== b) {
+      if (a === null) return 1
+      if (b === null) return -1
+      return b - a
+    }
+    return y.wins - x.wins || byName(x.name, y.name)
+  })
+}

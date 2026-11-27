@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { leaderboard, timeStats, playerOrder } from '../../src/stats/stats'
+import { leaderboard, timeStats, playerOrder, rankRows } from '../../src/stats/stats'
+import type { PlayerStats } from '../../src/stats/stats'
 import type { Game } from '../../src/types'
 
 const MIN = 60000
@@ -141,5 +142,32 @@ describe('playerOrder', () => {
       game('A', [['A', 1, 0], ['B', 2, 0]], MIN), game('C', [['C', 1, 0], ['D', 2, 0]], MIN),
     ]
     expect(playerOrder(['C', 'A'], g)).toEqual(['A', 'C'])
+  })
+})
+
+describe('rankRows', () => {
+  const row = (name: string, o: Partial<PlayerStats> = {}): PlayerStats => ({
+    name, wins: 0, played: 0, winRate: 0, boer: 0, anita: 0, folds: 0, avgDurationMs: null, totalDurationMs: 0, ...o,
+  })
+
+  it('sorts by the chosen stat desc then wins then name', () => {
+    const rows = [
+      row('Zed', { boer: 2, wins: 1 }),
+      row('Anna', { boer: 2, wins: 1 }),
+      row('Kees', { boer: 2, wins: 5 }),
+      row('Tim', { boer: 9 }),
+    ]
+    expect(rankRows(rows, 'boer').map((r) => r.name)).toEqual(['Tim', 'Kees', 'Anna', 'Zed'])
+    expect(rows[0].name).toBe('Zed')
+  })
+
+  it('winRate has no minimum games', () => {
+    const rows = [row('Big', { wins: 9, played: 10, winRate: 0.9 }), row('One', { wins: 1, played: 1, winRate: 1 })]
+    expect(rankRows(rows, 'winRate').map((r) => r.name)).toEqual(['One', 'Big'])
+  })
+
+  it('duration puts null last', () => {
+    const rows = [row('None'), row('Short', { avgDurationMs: 1000 }), row('Long', { avgDurationMs: 5000 })]
+    expect(rankRows(rows, 'duration').map((r) => r.name)).toEqual(['Long', 'Short', 'None'])
   })
 })
