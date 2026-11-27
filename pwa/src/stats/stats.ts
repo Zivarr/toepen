@@ -103,6 +103,6 @@ export function rankRows(rows: PlayerStats[], stat: RankStat): PlayerStats[] {
       if (b === null) return -1
       return b - a
     }
-    return y.wins - x.wins || byName(x.name, y.name)
+    return y.wins - x.wins || y.winRate - x.winRate || byName(x.name, y.name)
   })
 }

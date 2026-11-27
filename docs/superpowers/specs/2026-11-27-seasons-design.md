@@ -133,7 +133,7 @@ The Ranglijst also needs to stay readable on a phone now that it has a lot of co
 - **Table:**
   - Columns: rank, Naam, Gew., Gesp., and a third stat column.
   - The third column shows the chosen stat. With Gewonnen chosen, it shows win %.
-  - The list sorts by the chosen stat, descending. Ties break by wins, then by name. The rank number follows the sort.
+  - The list sorts by the chosen stat, descending. Ties break by wins, then win %, then name. The rank number follows the sort.
   - "Duur" is average game duration, longest first (my call).
 - **Unfolding rows:** tapping a row unfolds that player's other stats (win %, Boeren, Anita's, Gepast, Gem. duur) in a two-column grid. Tapping again folds it.
 - **Time stats** (the existing shortest/longest/average block) follow the season picker.
@@ -149,7 +149,7 @@ The Ranglijst also needs to stay readable on a phone now that it has a lot of co
   - *(my call)* If the ended season has no games, there's no just-ended state either, and the running season shows directly.
 - **"Vorige seizoenen"** *(my call)*: ended seasons with zero games are hidden from the list.
 - **Group page** never uses "Alles". It always shows one season.
-- **"%" sort** *(my call)*: there's no minimum number of games. Ties break by wins, then by name. It's a fun view, and the official ranking is Gewonnen.
+- **"%" sort** *(my call)*: there's no minimum number of games. Ties break by wins, then win %, then name. It's a fun view, and the official ranking is Gewonnen.
 - **"Not in the future"** *(my call)*: compare to the server clock with 5 minutes of tolerance.
 - **Phone caching:** none. Stats and titles are always computed fresh from cached games and seasons, and the ETag on `GET /groups` is the only invalidation.
 - **Approval of a local group:** until the next refresh delivers seasons, it's all season 1. That's fine.

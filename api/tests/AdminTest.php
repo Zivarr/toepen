@@ -274,6 +274,18 @@ final class AdminTest extends TestCase
         $this->assertSame(404, $this->call('POST', '/admin/groups/9999/delete-games', ['short_only' => false], $a['token'])->status);
     }
 
+    public function test_export_includes_seasons(): void
+    {
+        $a = $this->admin();
+        $gid = Groups::create($this->pdo(), 'Vrienden', $a['id'], 15);
+        $this->pdo()->prepare('INSERT INTO seasons (group_id, name, starts_at) VALUES (?, ?, ?)')
+            ->execute([$gid, 'Winter', '2026-12-01T00:00:00+00:00']);
+        $r = $this->call('GET', '/admin/export', null, $a['token']);
+        $this->assertSame(200, $r->status);
+        $this->assertCount(1, $r->body['seasons']);
+        $this->assertSame('Winter', $r->body['seasons'][0]['name']);
+    }
+
     public function test_export_contains_no_password_or_token_hashes(): void
     {
         $a = $this->admin();
@@ -282,7 +294,7 @@ final class AdminTest extends TestCase
         $this->addGame($gid, $tim['id'], $this->game(self::G1, 'Tim', 'Rav'));
         $r = $this->call('GET', '/admin/export', null, $a['token']);
         $this->assertSame(200, $r->status);
-        foreach (['users', 'groups', 'players', 'games', 'sync_requests'] as $k) {
+        foreach (['users', 'groups', 'players', 'games', 'seasons', 'sync_requests'] as $k) {
             $this->assertArrayHasKey($k, $r->body);
         }
         $this->assertCount(2, $r->body['users']);

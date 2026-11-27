@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'preact/hooks'
 import { getGames, getGroup } from '../storage/repo'
-import { gamesIn, pastSeasons, seasonsOf } from '../stats/seasons'
+import { gamesIn, pastSeasons, seasonsOf, seasonStartMs } from '../stats/seasons'
 import { formatDay } from '../util/format'
-import { SeasonTitles, seasonStartMs } from '../components/SeasonTitles'
+import { SeasonTitles } from '../components/SeasonTitles'
 import type { CachedGroup, GroupKey, StoredGame } from '../types'
 
 export function PastSeasons({ groupKey }: { groupKey: string }) {
@@ -39,6 +39,7 @@ export function PastSeasons({ groupKey }: { groupKey: string }) {
         </a>
       </p>
       <h1>Vorige seizoenen</h1>
+      {past.length === 0 && <p class="muted">Nog geen afgelopen seizoenen.</p>}
       {past.map(({ season, titles }) => {
         const start = seasonStartMs(season, gamesIn(season, games))
         const dates =

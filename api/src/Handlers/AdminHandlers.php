@@ -480,6 +480,7 @@ final class AdminHandlers
             'group_members' => $all('SELECT * FROM group_members ORDER BY group_id, user_id'),
             'players' => $all('SELECT * FROM players ORDER BY id'),
             'games' => $games,
+            'seasons' => $all('SELECT * FROM seasons ORDER BY group_id, starts_at, id'),
             'sync_requests' => $requests,
         ]);
     }

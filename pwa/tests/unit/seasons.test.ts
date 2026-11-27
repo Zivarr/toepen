@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { seasonsOf, gamesIn, titles, groupPageView, pastSeasons } from '../../src/stats/seasons'
+import { seasonStartMs, seasonsOf, gamesIn, titles, groupPageView, pastSeasons } from '../../src/stats/seasons'
 import type { Season } from '../../src/stats/seasons'
 import type { Game } from '../../src/types'
 
@@ -139,5 +139,19 @@ describe('pastSeasons', () => {
     const p = pastSeasons(s, games)
     expect(p.map((x) => x.season.number)).toEqual([3, 1])
     expect(p[0].titles.kampioen?.names).toEqual(['B'])
+  })
+})
+
+describe('seasonStartMs', () => {
+  const s = (o: Partial<Season>): Season => ({ id: null, number: 1, label: 'Seizoen 1', start: null, end: null, ...o })
+  it('returns a stored start', () => {
+    expect(seasonStartMs(s({ id: 2, number: 2, start: 5000 }), [game('A', [['A']])])).toBe(5000)
+  })
+  it('uses the oldest game for season 1', () => {
+    const gs = [game('A', [['A']], '2026-11-20T20:00:00+01:00'), game('A', [['A']], '2026-11-18T20:00:00+01:00')]
+    expect(seasonStartMs(s({}), gs)).toBe(Date.parse('2026-11-18T20:00:00+01:00'))
+  })
+  it('is null for season 1 without games', () => {
+    expect(seasonStartMs(s({}), [])).toBeNull()
   })
 })

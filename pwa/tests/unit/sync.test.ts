@@ -227,12 +227,20 @@ describe('refresh', () => {
   })
 
   it('refresh with 304 changes nothing', async () => {
-    await seedServerGroup()
+    await seedServerGroup({ seasons: [] })
     await db.kv.put({ key: 'etag', value: '"e1"' })
     m.fetchGroups.mockResolvedValue({ notModified: true })
     expect(await refresh()).toBe('unchanged')
     expect(m.fetchGroups).toHaveBeenCalledWith('"e1"')
-    expect(await getGroups()).toEqual([serverGroup])
+    expect(await getGroups()).toEqual([{ ...serverGroup, seasons: [] }])
+  })
+
+  it('refresh ignores the stored etag when a cached server group lacks seasons', async () => {
+    await seedServerGroup()
+    await db.kv.put({ key: 'etag', value: '"e1"' })
+    m.fetchGroups.mockResolvedValue({ notModified: false, groups: [srvGroup()], etag: '"e2"' })
+    expect(await refresh()).toBe('updated')
+    expect(m.fetchGroups).toHaveBeenCalledWith(undefined)
   })
 
   it('refresh returns offline on network error', async () => {

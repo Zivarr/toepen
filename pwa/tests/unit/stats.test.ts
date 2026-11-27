@@ -161,6 +161,15 @@ describe('rankRows', () => {
     expect(rows[0].name).toBe('Zed')
   })
 
+  it('rankRows wins ties are broken by win rate then name', () => {
+    const rows = [
+      row('A', { wins: 2, played: 4, winRate: 0.5 }),
+      row('B', { wins: 2, played: 3, winRate: 2 / 3 }),
+      row('Aa', { wins: 2, played: 3, winRate: 2 / 3 }),
+    ]
+    expect(rankRows(rows, 'wins').map((r) => r.name)).toEqual(['Aa', 'B', 'A'])
+  })
+
   it('winRate has no minimum games', () => {
     const rows = [row('Big', { wins: 9, played: 10, winRate: 0.9 }), row('One', { wins: 1, played: 1, winRate: 1 })]
     expect(rankRows(rows, 'winRate').map((r) => r.name)).toEqual(['One', 'Big'])

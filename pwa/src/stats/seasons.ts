@@ -88,3 +88,10 @@ export function pastSeasons(seasons: Season[], games: Game[]): { season: Season;
     .map((x) => ({ season: x.season, titles: titles(x.games) }))
     .reverse()
 }
+
+/** Start of a season for display: its own start, or for season 1 the oldest game in it. */
+export function seasonStartMs(season: Season, seasonGames: Game[]): number | null {
+  if (season.start !== null) return season.start
+  const times = seasonGames.map((g) => Date.parse(g.started_at))
+  return times.length ? Math.min(...times) : null
+}

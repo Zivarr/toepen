@@ -1,16 +1,8 @@
 import { useMemo } from 'preact/hooks'
 import type { Season, SeasonTitles as Titles, Title } from '../stats/seasons'
-import type { Game } from '../types'
 
 const COLORS = ['#ffffff', '#ef5350', '#1b5e20', '#42a5f5', '#ff7043', '#7e57c2']
 const PIECES = 25
-
-/** Start of a season for display: its own start, or for season 1 the oldest game in it. */
-export function seasonStartMs(season: Season, seasonGames: Game[]): number | null {
-  if (season.start !== null) return season.start
-  const times = seasonGames.map((g) => Date.parse(g.started_at))
-  return times.length ? Math.min(...times) : null
-}
 
 function reducedMotion(): boolean {
   try {
